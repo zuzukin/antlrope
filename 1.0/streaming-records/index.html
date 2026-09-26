@@ -25,23 +25,23 @@
       
       
       <link rel="icon" href="../assets/favicon.png">
-      <meta name="generator" content="zensical-0.0.46">
+      <meta name="generator" content="zensical-0.0.65">
     
     
       
-        <title>Recipe: stream a file of records - antlrope</title>
+        <title>Recipe: streaming records - antlrope</title>
       
     
     
       
         
       
-      <link rel="stylesheet" href="../assets/stylesheets/modern/main.19d3147f.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/modern/main.40d3fdbb.min.css">
       
         
           
         
-        <link rel="stylesheet" href="../assets/stylesheets/modern/palette.dfe2e883.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/modern/palette.812a03bb.min.css">
       
       
 
@@ -124,7 +124,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Recipe: stream a file of records
+              Recipe: streaming records
             
           </span>
         </div>
@@ -180,7 +180,7 @@
         <a href="https://github.com/zuzukin/antlrope" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
   </div>
   <div class="md-source__repository">
     zuzukin/antlrope
@@ -392,7 +392,7 @@
       <a href="https://github.com/zuzukin/antlrope" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
   </div>
   <div class="md-source__repository">
     zuzukin/antlrope
@@ -476,20 +476,21 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_1">
-            <span class="md-nav__icon md-icon"></span>
-            
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="true">
+            <label class="md-nav__title" for="__nav_1">
+              <span class="md-nav__icon md-icon"></span>
+              
   
   User Guide
 
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-            
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
               
                 
+              
+                
+                  
   
   
   
@@ -513,10 +514,10 @@
     </li>
   
 
-              
-            
+                
               
                 
+                  
   
   
   
@@ -540,10 +541,10 @@
     </li>
   
 
-              
-            
+                
               
                 
+                  
   
   
   
@@ -567,10 +568,10 @@
     </li>
   
 
-              
-            
+                
               
                 
+                  
   
   
     
@@ -718,10 +719,10 @@
     </li>
   
 
-              
-            
+                
               
                 
+                  
   
   
   
@@ -745,10 +746,10 @@
     </li>
   
 
-              
-            
+                
               
                 
+                  
   
   
   
@@ -772,10 +773,10 @@
     </li>
   
 
-              
-            
+                
               
                 
+                  
   
   
   
@@ -799,10 +800,10 @@
     </li>
   
 
-              
-            
+                
               
                 
+                  
   
   
   
@@ -826,10 +827,11 @@
     </li>
   
 
+                
               
-            
-          </ul>
-        </nav>
+            </ul>
+          </nav>
+        
       
     </li>
   
@@ -892,20 +894,21 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2">
-            <span class="md-nav__icon md-icon"></span>
-            
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_2">
+              <span class="md-nav__icon md-icon"></span>
+              
   
   Examples
 
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-            
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
               
                 
+              
+                
+                  
   
   
   
@@ -929,10 +932,10 @@
     </li>
   
 
-              
-            
+                
               
                 
+                  
   
   
   
@@ -956,10 +959,11 @@
     </li>
   
 
+                
               
-            
-          </ul>
-        </nav>
+            </ul>
+          </nav>
+        
       
     </li>
   
@@ -1039,18 +1043,19 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4">
-            <span class="md-nav__icon md-icon"></span>
-            
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_4">
+              <span class="md-nav__icon md-icon"></span>
+              
   
   Reference
 
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
               
                 
+                  
   
   
   
@@ -1074,10 +1079,10 @@
     </li>
   
 
-              
-            
+                
               
                 
+                  
   
   
   
@@ -1101,10 +1106,10 @@
     </li>
   
 
-              
-            
+                
               
                 
+                  
   
   
   
@@ -1128,10 +1133,11 @@
     </li>
   
 
+                
               
-            
-          </ul>
-        </nav>
+            </ul>
+          </nav>
+        
       
     </li>
   
@@ -1187,18 +1193,19 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5">
-            <span class="md-nav__icon md-icon"></span>
-            
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_5">
+              <span class="md-nav__icon md-icon"></span>
+              
   
   About
 
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
               
                 
+                  
   
   
   
@@ -1222,10 +1229,10 @@
     </li>
   
 
-              
-            
+                
               
                 
+                  
   
   
   
@@ -1249,10 +1256,10 @@
     </li>
   
 
-              
-            
+                
               
                 
+                  
   
   
   
@@ -1276,10 +1283,10 @@
     </li>
   
 
-              
-            
+                
               
                 
+                  
   
   
   
@@ -1303,10 +1310,11 @@
     </li>
   
 
+                
               
-            
-          </ul>
-        </nav>
+            </ul>
+          </nav>
+        
       
     </li>
   
@@ -1454,34 +1462,35 @@
 
 
 <h1 id="recipe-stream-a-file-of-records">Recipe: stream a file of records<a class="headerlink" href="#recipe-stream-a-file-of-records" title="Permanent link">&para;</a></h1>
-<p>When a file is a long sequence of independent records — log lines, NDJSON,
-sensor readings, the top-level definitions of a source file — and is too large to
-hold in memory, you can read, cut, and parse it as one bounded-memory pipeline: peak
-memory is about one record plus the parses in flight, flat in the file size. This
-recipe wires a streaming chunker to <a href="../parallel-parsing/"><code>walk_parallel</code></a> and walks
-through the details that bite — the preamble, a whitespace terminator, absolute
-positions, and metadata the parse tree can't see.</p>
+<p>When a file is a long sequence of independent records, such as log lines, NDJSON,
+sensor readings, or the top-level definitions of a source file, and is too large to
+hold in memory, you can read, split, and parse it in a single pipeline with bounded
+memory. Peak memory is about one record plus the parses in progress, and does not
+grow with file size. This recipe connects a streaming chunker to
+<a href="../parallel-parsing/"><code>walk_parallel</code></a> and covers the details that commonly cause
+problems: the preamble, a whitespace terminator, absolute positions, and metadata
+that the parse tree does not contain.</p>
 <p>The running example: a file whose records are one per line, each parsed by a grammar
 rule <code>record</code> (which ends in a mandatory <code>EOL</code>), generated as <code>RecordEventListener</code>.</p>
 <h2 id="the-pipeline">The pipeline<a class="headerlink" href="#the-pipeline" title="Permanent link">&para;</a></h2>
 <p>Split on the newline with <code>where="after"</code> so each chunk <em>ends</em> with its terminator,
-and feed the lazy stream straight to <code>walk_parallel</code>:</p>
+and pass the lazy stream directly to <code>walk_parallel</code>:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">record_listener</span><span class="w"> </span><span class="kn">import</span> <span class="n">RecordEventListener</span> <span class="k">as</span> <span class="n">R</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">chunks</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">stream_on_pattern</span><span class="p">(</span><span class="s2">&quot;big.log&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;\n&quot;</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="s2">&quot;after&quot;</span><span class="p">,</span> <span class="n">trim</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="k">for</span> <span class="n">listener</span> <span class="ow">in</span> <span class="n">R</span><span class="o">.</span><span class="n">walk_parallel</span><span class="p">(</span><span class="n">chunks</span><span class="p">,</span> <span class="n">start_rule</span><span class="o">=</span><span class="s2">&quot;record&quot;</span><span class="p">):</span>
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="o">...</span>  <span class="c1"># one fully-walked listener per record, in input order</span>
 </span></code></pre></div>
-<p>Both ends pull lazily: <code>stream_on_pattern</code> reads the file over a sliding window and
-materializes one chunk at a time;
+<p>Both ends pull lazily. <code>stream_on_pattern</code> reads the file over a sliding window and
+produces one chunk at a time, and
 <a href="../reference/api/#antlrope.FacadeListener.walk_parallel"><code>walk_parallel</code></a> keeps a
-bounded number of parses in flight. Nothing holds the whole file.</p>
+bounded number of parses in progress. Nothing holds the whole file.</p>
 <h2 id="keep-the-terminator-trimfalse">Keep the terminator: <code>trim=False</code><a class="headerlink" href="#keep-the-terminator-trimfalse" title="Permanent link">&para;</a></h2>
 <p>By default every chunker trims surrounding whitespace from each chunk and drops
-whitespace-only regions. That is not what we want in this case: a <code>record</code> rule that ends in <code>EOL</code>
-needs the trailing newline, and the default would strip it, so the parse fails on a
-missing <code>EOL</code>. Pass <code>trim=False</code> to keep each region verbatim (only truly empty,
-zero-length regions are dropped):</p>
+whitespace-only regions. That is wrong here: a <code>record</code> rule that ends in <code>EOL</code>
+needs the trailing newline. The default would strip it, and the parse would then
+fail on the missing <code>EOL</code>. Pass <code>trim=False</code> to keep each region exactly as it
+appears (only empty, zero-length regions are dropped):</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># trim=True (default):  &#39;{&quot;a&quot;: 1}&#39;      -&gt; EOL gone, record won&#39;t match</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="c1"># trim=False:           &#39;{&quot;a&quot;: 1}\n&#39;    -&gt; terminator preserved</span>
 </span></code></pre></div>
@@ -1491,37 +1500,39 @@ zero-length regions are dropped):</p>
 <a href="../reference/api/#antlrope.FacadeListener.split_on_pattern"><code>split_on_pattern</code></a>,
 <code>stream_on_pattern</code>, …).</p>
 <h2 id="the-preamble-content-before-the-first-delimiter">The preamble (content before the first delimiter)<a class="headerlink" href="#the-preamble-content-before-the-first-delimiter" title="Permanent link">&para;</a></h2>
-<p>With <code>where="before"</code>, the region <em>before the first delimiter</em> becomes its own
-leading chunk — a header or preamble; with <code>where="after"</code>, the region <em>after the
-last delimiter</em> is a trailing chunk. So a file that opens with a header line and then
-records, cut on a record marker, yields the header as the first chunk:</p>
+<p>With <code>where="before"</code>, the region before the first delimiter becomes its own
+leading chunk, such as a header or preamble. With <code>where="after"</code>, the region after
+the last delimiter becomes a trailing chunk. So a file that starts with a header line
+followed by records, split on a record marker, yields the header as the first chunk:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">stream</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">stream_on_pattern</span><span class="p">(</span><span class="s2">&quot;big.log&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;^record\b&quot;</span><span class="p">,</span> <span class="n">flags</span><span class="o">=</span><span class="n">re</span><span class="o">.</span><span class="n">MULTILINE</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">)</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">header</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span>                                   <span class="c1"># the pre-first-record preamble</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="k">for</span> <span class="n">listener</span> <span class="ow">in</span> <span class="n">R</span><span class="o">.</span><span class="n">walk_parallel</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">start_rule</span><span class="o">=</span><span class="s2">&quot;record&quot;</span><span class="p">):</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="o">...</span>                                                 <span class="c1"># stream now yields only records</span>
 </span></code></pre></div>
-<p>If the file may or may not have a preamble, don't assume the first chunk is one —
-recognize it (a real record chunk starts with the marker; the preamble does not), or
-choose a <code>where</code>/pattern that excludes it. The same leading/trailing region appears
-with the in-memory <code>split_*</code> chunkers; see <a href="../chunking/#source-positions-and-names">Chunking</a>.</p>
+<p>If the file may or may not have a preamble, don't assume the first chunk is one.
+Either check for it (a record chunk starts with the marker, and a preamble does not),
+or choose a <code>where</code> value and pattern that exclude it. The same leading and trailing
+regions appear with the in-memory <code>split_*</code> chunkers; see
+<a href="../chunking/#leading-and-trailing-regions-the-preamble">Chunking</a>.</p>
 <h2 id="absolute-positions">Absolute positions<a class="headerlink" href="#absolute-positions" title="Permanent link">&para;</a></h2>
-<p>Each <a href="../reference/api/#antlrope.Chunk"><code>Chunk</code></a> pins its <code>offset</code> / <code>line</code> / <code>column</code>
-against the whole file, not the chunk, and <code>walk_parallel</code> carries that through.
+<p>Each <a href="../reference/api/#antlrope.Chunk"><code>Chunk</code></a> records its <code>offset</code>, <code>line</code>, and
+<code>column</code> relative to the whole file, not the chunk, and <code>walk_parallel</code> preserves
+them.
 So inside a callback,
 <a href="../reference/api/#antlrope.FacadeListener.span"><code>span</code></a> and
 <a href="../reference/api/#antlrope.FacadeListener.line_col"><code>line_col</code></a> report whole-file
 positions, and <a href="../reference/api/#antlrope.FacadeListener.sourcename"><code>sourcename</code></a>
-(defaulting to the file path) lets you log <code>sourcename:line:column</code> — exactly as if
+(defaulting to the file path) lets you log <code>sourcename:line:column</code>, exactly as if
 you had parsed the file in one piece.</p>
 <h2 id="recover-off-channel-metadata">Recover off-channel metadata<a class="headerlink" href="#recover-off-channel-metadata" title="Permanent link">&para;</a></h2>
-<p>The walk is channel-blind: <code>walk_parallel</code> walks the <em>parse tree</em>, which contains
-only the tokens the parser consumed — the default channel. Tokens the lexer routed to
-a hidden <a href="../glossary/#token-channel">channel</a> (comments, directives, alignment metadata) are never
-in the tree, so they never reach <code>visitTerminal</code>. To recover them, lex the chunk text
-yourself — <a href="../reference/api/#antlrope.FacadeListener.lex"><code>lex</code></a> returns <em>every</em> token
-with its <code>channel</code> — and keep the off-channel ones. Because the chunk text is in hand
-only while you hold the chunk, do it in an inline loop rather than the pure
-<code>walk_parallel</code> form:</p>
+<p>The walk ignores hidden channels. <code>walk_parallel</code> walks the parse tree, which
+contains only the tokens the parser consumed, and those are on the default channel.
+Tokens the lexer sent to a hidden <a href="../glossary/#token-channel">channel</a> (comments, directives,
+alignment metadata) are never in the tree, so they never reach <code>visitTerminal</code>. To
+recover them, lex the chunk text yourself and keep the off-channel tokens;
+<a href="../reference/api/#antlrope.FacadeListener.lex"><code>lex</code></a> returns every token with its
+<code>channel</code>. The chunk text is only available while you hold the chunk, so do this in
+an ordinary loop instead of passing the chunks straight to <code>walk_parallel</code>:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">R</span><span class="o">.</span><span class="n">stream_on_pattern</span><span class="p">(</span><span class="s2">&quot;big.log&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;\n&quot;</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="s2">&quot;after&quot;</span><span class="p">,</span> <span class="n">trim</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="n">listener</span> <span class="o">=</span> <span class="n">R</span><span class="p">()</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">chunk</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">start_rule</span><span class="o">=</span><span class="s2">&quot;record&quot;</span><span class="p">)</span>        <span class="c1"># on-channel structure</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="n">comments</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">R</span><span class="o">.</span><span class="n">lex</span><span class="p">(</span><span class="n">chunk</span><span class="o">.</span><span class="n">text</span><span class="p">)</span> <span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="n">channel</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]</span>  <span class="c1"># 0 = default channel</span>
@@ -1529,31 +1540,32 @@ only while you hold the chunk, do it in an inline loop rather than the pure
 </span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="c1"># for whole-file positions:</span>
 </span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="n">spans</span> <span class="o">=</span> <span class="p">[(</span><span class="n">chunk</span><span class="o">.</span><span class="n">offset</span> <span class="o">+</span> <span class="n">t</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">chunk</span><span class="o">.</span><span class="n">offset</span> <span class="o">+</span> <span class="n">t</span><span class="o">.</span><span class="n">stop</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">comments</span><span class="p">]</span>
 </span></code></pre></div>
-<p>This trades the thread pool for the chunk text; to keep both, lex inside a wrapper
-generator that yields <code>(chunk, comments)</code> and parse the chunks in parallel separately.<sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup></p>
+<p>This loop gives up the thread pool in exchange for access to the chunk text. To keep
+both, lex each chunk in a wrapper generator that yields <code>(chunk, comments)</code>, and parse
+the chunks in parallel separately.<sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup></p>
 <h2 id="when-records-are-not-delimiter-marked">When records are not delimiter-marked<a class="headerlink" href="#when-records-are-not-delimiter-marked" title="Permanent link">&para;</a></h2>
-<p>If records are defined by grammar structure rather than a delimiter — and the file is
-a directly-adjacent top-level sequence of them — use
+<p>If records are defined by grammar structure rather than by a delimiter, and the
+file is a top-level sequence of directly adjacent records, use
 <a href="../reference/api/#antlrope.FacadeListener.stream_by_rule"><code>stream_by_rule</code></a>, which
-parses one record at a time and needs no delimiter. It requires the <em>whole</em> input to
-be that sequence (only lexer-skipped whitespace/comments may separate records) and
-raises a clear error if an on-channel token begins no candidate rule — an
-unsupported header or separator results in an error, not a silently truncated
-stream. For comma-separated or otherwise on-channel-delimited records, stay with
-<code>stream_on_token</code> / <code>stream_on_pattern</code>.</p>
+parses one record at a time and needs no delimiter. It requires the whole input to be
+such a sequence, with only whitespace and comments that the lexer skips between
+records. If an on-channel token does not begin any candidate rule, for example an
+unsupported header or separator, it raises a clear error instead of silently
+truncating the stream. For records separated by commas or other on-channel tokens,
+use <code>stream_on_token</code> or <code>stream_on_pattern</code> instead.</p>
 <h2 id="cost-of-a-full-per-record-listener">Cost of a full per-record listener<a class="headerlink" href="#cost-of-a-full-per-record-listener" title="Permanent link">&para;</a></h2>
-<p>A full Python listener pays one loop iteration per kept event, so a record walked
-with everything subscribed costs roughly its native parse again on the Python side.
-Two levers claw it back, both covered in
-<a href="../performance/#where-the-speed-comes-from-and-its-ceiling">Performance</a>: subscribe to
-only the rules/tokens you need (the facade emits just those from C++), or aggregate in
-a rule so fewer events cross into Python at all.</p>
+<p>A full Python listener pays one loop iteration per kept event, so walking a record
+with everything subscribed costs roughly as much in Python as the native parse
+itself. There are two ways to reduce this cost, both covered in
+<a href="../performance/#where-the-speed-comes-from-and-its-ceiling">Performance</a>: subscribe
+only to the rules and tokens you need (the facade emits only those from C++), or
+aggregate inside a rule so that fewer events cross into Python.</p>
 <div class="footnote">
 <hr />
 <ol>
 <li id="fn:1">
 <p>The need for a first-class channel-aware callback during the walk is
-<a href="https://github.com/zuzukin/antlrope/issues/2">tracked in issue #2</a>.)&#160;<a class="footnote-backref" href="#fnref:1" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+<a href="https://github.com/zuzukin/antlrope/issues/2">tracked in issue #2</a>.&#160;<a class="footnote-backref" href="#fnref:1" title="Jump back to footnote 1 in the text">&#8617;</a></p>
 </li>
 </ol>
 </div>
@@ -1657,7 +1669,7 @@ a rule so fewer events cross into Python at all.</p>
       
     
     <a href="https://github.com/zuzukin/antlrope" target="_blank" rel="noopener" title="github.com" class="md-social__link">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
     </a>
   
 </div>
@@ -1675,10 +1687,14 @@ a rule so fewer events cross into Python at all.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"..","features":["content.code.annotate","content.code.copy","content.code.select","content.tooltips","navigation.footer","navigation.indexes","navigation.instant","navigation.instant.prefetch","navigation.path","navigation.sections","navigation.tabs","navigation.top","navigation.tracking","search.highlight"],"search":"../assets/javascripts/workers/search.b6b7e04f.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":{"alias":true,"provider":"mike"}}</script>
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"..","features":["content.code.annotate","content.code.copy","content.code.select","content.tooltips","navigation.footer","navigation.indexes","navigation.instant","navigation.instant.prefetch","navigation.path","navigation.sections","navigation.tabs","navigation.top","navigation.tracking","search.highlight"],"redirect":null,"search":"../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":{"alias":true,"provider":"mike"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.ee611ef6.min.js"></script>
+      <script src="../assets/javascripts/bundle.c04ba553.min.js"></script>
       
     
   </body>
