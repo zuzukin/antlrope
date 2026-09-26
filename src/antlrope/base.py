@@ -1142,8 +1142,7 @@ class FacadeListener:
 
         Token-aware: because it runs the grammar's lexer, a delimiter that appears
         inside a string or comment token never causes a split. The cost is lexing the
-        whole input. Finding the delimiters is roughly an order of magnitude slower
-        than with the regex-based
+        whole input. Finding the delimiters is about 7x slower than with the regex-based
         [split_on_pattern][antlrope.FacadeListener.split_on_pattern] (about 4x end to
         end), but still negligible compared with the parse it feeds. See the
         "Chunking: lexer vs regex" notes in `docs/performance.md`.
@@ -1425,9 +1424,8 @@ class FacadeListener:
 
         The regex analogue of
         [split_on_token][antlrope.FacadeListener.split_on_token]. No lexer is
-        involved, so it is much faster: roughly an order of magnitude faster at
-        finding delimiters and a few times faster end to end (the per-chunk Python
-        work is the same). However, it is not token-aware, so a match inside a string
+        involved, so it is much faster: about 7x faster at finding delimiters and about
+        4x faster end to end (the per-chunk Python work is the same). However, it is not token-aware, so a match inside a string
         or comment still counts as a delimiter. Use it when the delimiter text cannot
         appear inside other tokens; otherwise use the token-based splitter. See the
         "Chunking: lexer vs regex" notes in `docs/performance.md`.

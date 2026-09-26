@@ -38,16 +38,20 @@ event:
 
 The [SystemRDL benchmark](benchmarks/systemrdl.md) measures a real grammar against
 both the pure-Python runtime and the `speedy-antlr` tree-translation accelerator.
-Antlrope is about 21× faster than pure-Python and about 8× faster than
-speedy-antlr, with lower peak memory.
+On its 2.6 MB input, Antlrope is about 20–23× faster than pure-Python and about
+8–9× faster than speedy-antlr, with lower peak memory.
 
 ### Underlying C++ runtime
 
 This package bundles a patched snapshot of the ANTLR4 C++ runtime (see
 `vendor/antlr4-cpp/UPDATING.md`). One patch makes the lexer's per-character [DFA]
-edge lookups lock-free. Compared with the stock C++ runtime, that patch alone
-measured roughly **1.7–1.8×** faster lexing and **1.3–1.4×** faster total parsing
-on a single thread, with larger gains under concurrency.
+edge lookups lock-free. On a single thread, compared with the stock C++ runtime,
+that patch alone makes lexing about **1.6–1.7×** faster and a whole JSON parse
+about **1.2×** faster. The whole-parse gain is smaller because lexing is only about
+a third of the parse time, and it is smaller still for grammars whose parsing
+outweighs their lexing. A second patch helps concurrent parses that share a spec
+(see [Parallel parsing](#parallel-parsing) below and
+[How it works](concepts.md#how-much-do-the-patches-contribute)).
 
 ## Limitation: semantic predicates and embedded actions
 
@@ -149,7 +153,9 @@ Two implementation notes:
   construction, which makes them slower than serial parsing. The vendored runtime
   moves those write locks onto each DFA (see `vendor/antlr4-cpp/UPDATING.md`,
   Patch 2), so a shared spec now scales as well as independent specs. Edge reads
-  were already lock-free.
+  were already lock-free. This matters only when your own code shares one spec
+  across threads. `walk_parallel` gives each worker thread its own spec, so it does
+  not depend on this patch.
 - **Cold DFA per parse.** Each parse builds its own prediction DFA from scratch, so
   very small chunks spend proportionally more time warming up. Larger chunks
   amortize this cost, and real-world chunks are usually large enough that it is

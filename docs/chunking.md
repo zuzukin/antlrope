@@ -44,8 +44,8 @@ chunks = MyGrammarEventListener.split_between_tokens(
 
 ## Regex-based — split on a pattern
 
-These chunkers use no lexer. They find delimiters roughly an order of magnitude
-faster, but they are not token-aware, so a match inside a string still causes a
+These chunkers use no lexer. They find delimiters about 7× faster (about 4× faster
+end to end), but they are not token-aware, so a match inside a string still causes a
 split. Prefer them when the delimiter text cannot appear anywhere else in the
 input.
 

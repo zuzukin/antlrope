@@ -103,8 +103,9 @@ fork, and `vendor/antlr4-cpp/UPDATING.md` lists the exact branches and commit.
   concurrent parses of one grammar wait on a single lock even though their DFAs are
   independent. This patch moves the locks for writing DFA states and edges from the
   ATN to each DFA, so independent parses can proceed in parallel. This is what lets
-  [parallel parsing](parallel-parsing.md) with a shared spec scale across threads;
-  without it, parallel parsing is slower than serial parsing.
+  threads that share one spec parse in parallel; without it, they run slower than
+  serial parsing. [walk_parallel](parallel-parsing.md) gives each worker thread its
+  own spec, so it does not depend on this patch.
 
 Neither patch changes parse results; both only improve concurrency and throughput.
 Each is kept as a small, isolated diff so it can be removed from the snapshot if
@@ -125,20 +126,22 @@ JSON document on an Apple M5 Max (`scripts/bench_runtime_patches.py`):
 The results show two things:
 
 - **The single-threaded speedup comes mostly from the design, not the runtime
-  patches.** Lock-free reads cut parse time by about 12%. The rest of Antlrope's
-  ~20× advantage over the pure-Python runtime (see
+  patches.** Lock-free reads cut this JSON parse time by about 12–15%: they make
+  the lexer about 1.6–1.7× faster, but lexing is only about a third of the total.
+  The rest of Antlrope's ~20× advantage over the pure-Python runtime (see
   [the SystemRDL benchmark](benchmarks/systemrdl.md)) comes from the bulk event
-  stream, not from the patched C++. Even on the unpatched runtime, Antlrope would be
-  ~18× faster than pure Python here. JSON is lexer-heavy, which favors this patch
-  because its gain is in the lexer's per-character DFA lookups; a parser-heavy
-  grammar gains less.
-- **The parallel speedup comes entirely from the runtime patches.** On the
+  stream, not from the patched C++. If the patch saved the same share there, Antlrope
+  would still be about 18× faster than pure Python on the unpatched runtime. JSON is
+  lexer-heavy, which favors this patch; a grammar whose parsing outweighs its lexing
+  gains less.
+- **The shared-spec parallel speedup comes entirely from the runtime patches.** On the
   unpatched runtime, parsing with a shared spec on four threads is twice as slow as
   serial parsing, because the ATN-wide write lock serializes every thread. With
   per-DFA write locks, it is about 2× faster than serial, and about 4× faster in
   wall-clock time than the unpatched runtime on the same four threads. Without this
-  patch, [parallel parsing](parallel-parsing.md) with a shared spec is not
-  worthwhile.
+  patch, sharing one spec across threads is not worthwhile.
+  [walk_parallel](parallel-parsing.md) is unaffected either way, because each of its
+  worker threads builds its own spec.
 
 [parse tree]: glossary.md#parse-tree
 [FFI]: glossary.md#ffi

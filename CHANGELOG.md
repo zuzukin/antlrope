@@ -22,6 +22,12 @@ follows semantic versioning (see the version policy in
   (`walk` takes no `sourcename`), the `stream_on_pattern` `sourcename` default,
   `LineCol.add`, the undocumented `text` argument of `walk`, and the exit
   statuses of `antlrope check` and `antlrope up-to-date`.
+- Performance figures that disagreed across pages, re-measured where needed: the
+  lock-free DFA patch speeds up lexing about 1.6–1.7× and a whole JSON parse about
+  1.2× (not 1.3–1.4×); regex chunking is about 7× faster than lexer chunking at
+  finding delimiters (not "an order of magnitude"); the SystemRDL speedup is
+  ~20–23× on the large input; and the docs now say `walk_parallel` uses per-thread
+  specs, so it does not depend on the per-DFA-lock patch.
 
 ## [1.0.1] - 2026-07-25
 

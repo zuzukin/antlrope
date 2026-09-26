@@ -11,7 +11,7 @@ hardware register-description language. Its grammar is a 461-line combined gramm
 with no actions or predicates, which is the target-agnostic case that all three tools
 support.
 
-![antlrope vs the pure-Python runtime and speedy-antlr: parse and read a 2.6 MB SystemRDL file, ~21x faster than pure-Python and ~8x faster than speedy-antlr at lower peak memory](systemrdl.svg)
+![antlrope vs the pure-Python runtime and speedy-antlr: parse and read a 2.6 MB SystemRDL file, ~23x faster than pure-Python and ~9x faster than speedy-antlr at lower peak memory](systemrdl.svg)
 
 ## TL;DR
 
@@ -90,8 +90,9 @@ by hash; 32,000 ids on the large input).
 | | antlrope (all terminals) | 197 ms | 242 MB |
 | | **antlrope (native `ID` filter)** | **174 ms** | **218 MB** |
 
-End-to-end, Antlrope is **~21–23× faster than the pure-Python runtime and
-~8–9× faster than speedy-antlr**, at the lowest peak memory.
+End to end on the large input, Antlrope is **~20–23× faster than the pure-Python
+runtime and ~8–9× faster than speedy-antlr**, at the lowest peak memory. On the
+medium input the margins are smaller (~15–18× and ~5–6×).
 
 Two effects compound here. First, the tree-walking tools must traverse *every* node
 to reach the terminals; the [facade] only receives the events its listener subscribes
