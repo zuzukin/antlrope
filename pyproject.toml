@@ -321,8 +321,28 @@ inputs = ["src/antlrope/**/*", "cpp/**/*", "vendor/antlr4-cpp/src/**/*", "CMakeL
 outputs = ["dist/*.whl"]
 
 [tool.pixi.tasks.clean]
-description = "Remove build/packaging artifacts (dist/, output/, the per-wheel-tag native build trees under build/, build-asan/, wheelhouse/, .coverage/, site/, .zensical/); `pixi install` rebuilds the editable extension."
-cmd = "rm -rf dist output build-asan wheelhouse .coverage site .zensical build/cp*-*"
+description = "Remove all generated artifacts"
+depends-on = ["clean-build", "clean-doc", "clean-coverage", "clean-dist"]
+
+[tool.pixi.tasks.clean-asan]
+description = "Remove ASan-instrumented extension build"
+cmd = "rm -rf build-asan"
+
+[tool.pixi.tasks.clean-build]
+description = "Remove generated C++ extension"
+cmd = "rm -rf build/cp*-*"
+
+[tool.pixi.tasks.clean-doc]
+description = "Remove generated documentation artifacts"
+cmd = "rm -rf site .zensical"
+
+[tool.pixi.tasks.clean-coverage]
+description = "Remove generated coverage reports"
+cmd = "rm -rf .coverage"
+
+[tool.pixi.tasks.clean-dist]
+description = "Remove built wheel and conda distributions"
+cmd = "rm -rf dist wheelhouse output"
 
 [tool.pixi.tasks.stubgen]
 description = "Regenerate src/antlrope/_native.pyi from the built extension (runs nanobind stubgen + re-applies the hand edits)."
