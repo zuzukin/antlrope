@@ -16,19 +16,20 @@
 // without ever holding the whole input in memory.
 //
 // The vendored runtime's own streaming stream, UnbufferedCharStream, takes a
-// std::wistream of *pre-decoded* wide characters and uses an in-band 0xFFFF EOF
-// marker — both tied to wchar_t, which is 16-bit (UTF-16) on Windows and would
-// corrupt astral codepoints. So this is a standalone char32_t stream that owns
-// the UTF-8 decode (via the runtime's own incremental antlrcpp::Utf8::decode)
-// and a random-access window over the codepoints it has decoded.
+// std::wistream of pre-decoded wide characters and uses an in-band 0xFFFF EOF
+// marker. Both depend on wchar_t, which is 16-bit (UTF-16) on Windows and would
+// corrupt codepoints outside the Basic Multilingual Plane. So this is a
+// standalone char32_t stream that owns the UTF-8 decode (via the runtime's own
+// incremental antlrcpp::Utf8::decode) and a random-access window over the
+// codepoints it has decoded.
 //
-// Unlike UnbufferedCharStream, the window is NOT auto-compacted on consume():
+// Unlike UnbufferedCharStream, the window is not auto-compacted on consume():
 // the lexer over-consumes during prediction and then seek()s back (see
 // LexerATNSimulator::accept), so the buffer is kept and only dropped explicitly
-// via dropThrough() at chunk boundaries. The chunker holds the window from the
-// current chunk's start (which is <= every lexer mark inside the chunk), so the
-// lexer's own mark/seek lookahead is always satisfied and getText() over a
-// whole chunk span — many tokens plus the whitespace between them — works by
+// via dropThrough() at chunk boundaries. The chunker keeps the window from the
+// current chunk's start, which is at or before every lexer mark inside the
+// chunk. That keeps the lexer's mark/seek lookahead valid and lets getText()
+// read a whole chunk span (many tokens plus the whitespace between them) by
 // absolute index. Peak memory is one chunk plus the lexer's bounded prediction
 // overshoot.
 
@@ -96,9 +97,10 @@ public:
         return _buf[abs - _buf_start];
     }
 
-    // mark()/release() are bookkeeping only: the window is never compacted here
-    // (the chunker calls dropThrough() at boundaries), so the lexer's lookahead
-    // region — always inside the current chunk we already retain — stays valid.
+    // mark() and release() are bookkeeping only: the window is never compacted
+    // here (the chunker calls dropThrough() at boundaries), so the lexer's
+    // lookahead region stays valid. That region is always inside the current
+    // chunk, which the window already retains.
     ssize_t mark() override {
         _mark_depth++;
         return -static_cast<ssize_t>(_mark_depth);
@@ -138,7 +140,7 @@ public:
             "streaming char source has no known total size: size() requires "
             "the whole input. This usually means the parser fell back to "
             "whole-input error recovery on a malformed record. Give "
-            "stream_by_rule / stream_on_* a clean sequence of records, or "
+            "stream_by_rule or stream_on_token a clean sequence of records, or "
             "use the in-memory chunkers (chunk_by_rule, split_*) for input "
             "that needs a full parse.");
     }
@@ -233,10 +235,10 @@ private:
         return true;
     }
 
-    // Make >= 4 bytes (the max UTF-8 sequence length) available from _byte_pos,
-    // or read to EOF trying. Looping matters for small blocks: a single read
-    // may not cover a multi-byte sequence. Compacting before each read makes a
-    // sequence straddling a block boundary contiguous.
+    // Make at least 4 bytes (the maximum UTF-8 sequence length) available from
+    // _byte_pos, or read until EOF. Looping matters for small blocks: a single
+    // read may not cover a multi-byte sequence. Compacting before each read
+    // makes a sequence straddling a block boundary contiguous.
     bool ensure_bytes() {
         while (_bytes.size() - _byte_pos < 4 && !_file_eof) {
             if (_byte_pos > 0) {

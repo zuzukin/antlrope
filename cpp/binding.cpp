@@ -57,7 +57,8 @@ using namespace antlr4;
 using namespace antlrope_events;
 
 // ---------------------------------------------------------------------------
-// ATN shape report (kept for the ATN-transfer / spec-load gate).
+// ATN shape report (kept as a check that a serialized ATN transfers and
+// loads).
 // ---------------------------------------------------------------------------
 struct AtnShape {
     int grammar_type;
@@ -83,8 +84,8 @@ static AtnShape atn_shape(const std::vector<int32_t> &serialized) {
 }
 
 // ---------------------------------------------------------------------------
-// Grammar-agnostic parse pipeline driven by the serialized ATN + name lists the
-// stock Python3-target ANTLR tool already emits. Specs own the deserialized
+// Grammar-agnostic parse pipeline driven by the serialized ATN and name lists
+// the stock Python3-target ANTLR tool already emits. Specs own the deserialized
 // ATN; interpreters hold references into it and are created per parse call.
 // ---------------------------------------------------------------------------
 struct LexerSpec {
@@ -169,7 +170,7 @@ struct SyntaxError {
 
 // Replaces ANTLR's default ConsoleErrorListener (which writes to stderr). It
 // captures each syntaxError into a structured list the caller hands to Python,
-// so the consumer — not the library — decides how parse errors are reported.
+// so the consumer, not the library, decides how parse errors are reported.
 class CollectingErrorListener : public BaseErrorListener {
 public:
     std::vector<SyntaxError> errors;
@@ -192,10 +193,10 @@ public:
     }
 };
 
-// Run lexer + parser to a full tree. Returns the root; tree memory is owned by
-// the ParserInterpreter, so the caller must keep both alive while walking. The
-// default console error listeners are removed so parsing never writes to
-// stderr; pass `err_listener` to collect diagnostics instead.
+// Run the lexer and parser to a full tree. Returns the root; tree memory is
+// owned by the ParserInterpreter, so the caller must keep both alive while
+// walking. The default console error listeners are removed so parsing never
+// writes to stderr; pass `err_listener` to collect diagnostics instead.
 static ParserRuleContext *run_parse(ParserSpec &pspec,
                                     LexerSpec &lspec,
                                     ANTLRInputStream &input,
@@ -217,7 +218,8 @@ static ParserRuleContext *run_parse(ParserSpec &pspec,
     return parser.parse(start_rule);
 }
 
-// Diagnostic: pure native cost — parse + walk with a C++ listener.
+// Diagnostic: measure the pure native cost by parsing and walking with a C++
+// listener.
 static nb::dict parse_count(ParserSpec &pspec,
                             LexerSpec &lspec,
                             const std::string &text,
@@ -226,7 +228,7 @@ static nb::dict parse_count(ParserSpec &pspec,
     size_t num_tokens;
     {
         // Pure native: the counting listener never crosses into Python, so the
-        // whole parse + walk runs without the GIL.
+        // whole parse and walk runs without the GIL.
         nb::gil_scoped_release release;
 
         ANTLRInputStream input(text);
@@ -259,7 +261,7 @@ static nb::dict parse_count(ParserSpec &pspec,
     return d;
 }
 
-// Diagnostic escape hatch: parse + walk crossing into a Python
+// Diagnostic fallback: parse and walk, calling into a Python
 // ParseTreeListener subclass (the slow per-node FFI path).
 static void parse_walk(ParserSpec &pspec,
                        LexerSpec &lspec,
@@ -295,14 +297,14 @@ static void parse_walk(ParserSpec &pspec,
 // ---------------------------------------------------------------------------
 // Bulk event stream: a native iterative DFS over the finished parse tree emits
 // a flat (kind, payload, start, stop) int32 record per visited item into one
-// contiguous buffer, handed to Python in a single transfer. Optional rule/token
-// masks let the consumer drop events it does not care about *in C++*, cutting
-// the number of records Python must iterate. This replaces ~#nodes per-node FFI
-// callbacks with one crossing. The DFS lives in events.h.
+// contiguous buffer, handed to Python in a single transfer. Optional rule and
+// token masks let the consumer drop unwanted events in C++, which reduces the
+// number of records Python must iterate. One crossing replaces a per-node FFI
+// callback for every tree node. The DFS lives in events.h.
 //
 // Returned as a flat little-endian int32 buffer of 4*N values (N event rows of
-// (kind, payload, start, stop)). Python wraps it with memoryview(...).cast("i")
-// — no numpy dependency.
+// (kind, payload, start, stop)). Python decodes it with
+// struct.iter_unpack("<4i", ...), with no numpy dependency.
 //
 // NOTE: internal, but the srdl-bench benchmark (github.com/zuzukin/srdl-bench)
 // calls this directly (via antlrope._native) to time the raw native stage;
@@ -366,8 +368,9 @@ static nb::object parse_events(ParserSpec &pspec,
 }
 
 // Diagnostic: time each stage of the native pipeline separately so the parse
-// gap can be decomposed (input UTF-32 decode / lex+fill / parse-to-tree / DFS
-// walk). Returns seconds per stage plus token and event counts.
+// time can be broken down into input UTF-32 decoding, lexing and token fill,
+// parsing to a tree, and the DFS walk. Returns seconds per stage plus token and
+// event counts.
 static nb::dict parse_stage_times(ParserSpec &pspec,
                                   LexerSpec &lspec,
                                   const std::string &text,
@@ -421,14 +424,15 @@ static nb::dict parse_stage_times(ParserSpec &pspec,
 }
 
 // ---------------------------------------------------------------------------
-// Lexer-only pass: run just the LexerInterpreter + token fill (no parser, no
-// ATN prediction — the cheap stage) and return one record per token, (type,
+// Lexer-only pass: run just the LexerInterpreter, pulling tokens one at a time
+// with no parser (the cheap stage), and return one record per token, (type,
 // channel, start, stop), as a flat int32 buffer. Used to split input into
-// chunks for walk_parallel without a full parse. `start`/`stop` are codepoint
-// offsets matching the event-stream / SourceMap convention (line/column are
-// left to the caller's SourceMap). The EOF sentinel token is omitted. An
-// optional token_mask (list of token types to keep) drops the rest in C++ —
-// chunkers ask only for their boundary tokens, so little crosses into Python.
+// chunks for walk_parallel without a full parse. `start` and `stop` are
+// codepoint offsets that follow the same convention as the event stream and
+// SourceMap (line and column are left to the caller's SourceMap). The EOF token
+// is omitted. An optional token_mask (list of token types to keep) drops the
+// rest in C++. The chunkers ask only for their boundary tokens, so little data
+// crosses into Python.
 // ---------------------------------------------------------------------------
 static nb::object lex(LexerSpec &lspec,
                       const std::string &text,
@@ -495,8 +499,8 @@ static nb::object rule_spans(ParserSpec &pspec,
     std::vector<int32_t> buf;
     CollectingErrorListener err_listener;
     {
-        // Pure C++ parse + tree walk: release the GIL so independent inputs can
-        // be scanned for rule spans in parallel.
+        // Pure C++ parse and tree walk: release the GIL so independent inputs
+        // can be scanned for rule spans in parallel.
         nb::gil_scoped_release release;
 
         ANTLRInputStream input(text);
@@ -542,11 +546,12 @@ static nb::object rule_spans(ParserSpec &pspec,
 // UTF-8 file itself and lexes it incrementally over a sliding window
 // (Utf8FileCharStream), never holding the whole input. On reaching each
 // delimiter token it slices that chunk's text out of the window and frees it,
-// so peak memory is ~one chunk. next_batch(n) pulls up to n positioned chunks;
-// the object is stateful and reused across batches. Only the requested
-// delimiter types start/end chunks (where = before/after), like split_on_token;
-// whitespace is trimmed and whitespace-only regions are skipped. Line/column
-// are tracked incrementally, with no whole-input SourceMap.
+// so peak memory is about one chunk. next_batch(n) pulls up to n positioned
+// chunks; the object is stateful and reused across batches. Only the requested
+// delimiter types start or end chunks (where = before or after), like
+// split_on_token. Unless trim is false, whitespace is trimmed and
+// whitespace-only regions are skipped. Line and column are tracked
+// incrementally, with no whole-input SourceMap.
 // ---------------------------------------------------------------------------
 // One positioned chunk record as handed to Python: the chunk's absolute
 // codepoint offset, 1-based line, 0-based column, and UTF-8 text.
@@ -592,8 +597,8 @@ struct StreamChunker {
           channel(channel_.value_or(0)), trim(trim_) {
         stream = std::make_unique<antlrope::Utf8FileCharStream>(
             path, lenient, block);
-        // The interpreter holds references into the spec (ATN + name lists), so
-        // the spec must outlive this object — see keep_alive on the binding.
+        // The interpreter holds references into the spec (ATN and name lists),
+        // so the spec must outlive this object (see keep_alive on the binding).
         lexer = std::make_unique<LexerInterpreter>(spec.grammar_file_name,
                                                    spec.vocabulary,
                                                    spec.rule_names,
@@ -712,9 +717,9 @@ struct StreamChunker {
         std::vector<ChunkRec> recs;
         bool more;
         {
-            // Pure C++ (file IO + decode + lex + getText): release the GIL for
-            // the whole batch like lex(); only building the result list below
-            // needs it.
+            // Pure C++ (file IO, decoding, lexing, getText): release the GIL
+            // for the whole batch like lex(); only building the result list
+            // below needs it.
             nb::gil_scoped_release release;
             more = run_batch(n, recs);
         }
@@ -733,15 +738,15 @@ struct StreamChunker {
 // Streaming rule chunker: the streaming counterpart of chunk_by_rule. Treats
 // the input as a sequence of top-level occurrences of one or more parser rules
 // and yields each, one at a time, over a bounded-memory pipeline
-// (Utf8FileCharStream
-// -> LexerInterpreter -> UnbufferedTokenStream -> ParserInterpreter). At each
-// position it dispatches on the next token — via each candidate rule's FIRST
-// set — to choose which rule to parse, parses exactly that one record, captures
-// its span, then frees the record's tokens (token-stream mark/release), parse
-// tree (tree-tracker reset) and characters (char-window dropThrough). Unlike
-// chunk_by_rule it does NOT find a rule anywhere in a full parse: records must
-// be a directly-adjacent top-level sequence (lexer-skipped whitespace/comments
-// between them are fine). next_batch(n) pulls up to n positioned records.
+// (Utf8FileCharStream -> LexerInterpreter -> UnbufferedTokenStream ->
+// ParserInterpreter). At each position it uses the next token and each
+// candidate rule's FIRST set to choose which rule to parse. It parses exactly
+// that one record, captures its span, and then frees the record's tokens
+// (token-stream mark/release), parse tree (tree-tracker reset), and characters
+// (char-window dropThrough). Unlike chunk_by_rule, it does not search a full
+// parse for the rule. Records must form a directly adjacent top-level sequence,
+// with only lexer-skipped whitespace or comments between them. next_batch(n)
+// pulls up to n positioned records.
 // ---------------------------------------------------------------------------
 struct StreamRuleChunker {
     CollectingErrorListener err;
@@ -752,9 +757,8 @@ struct StreamRuleChunker {
     // (rule index, FIRST set) candidates, tried in the given order so the first
     // whose FIRST set contains the next token is chosen.
     std::vector<std::pair<size_t, antlr4::misc::IntervalSet>> candidates;
-    // Borrowed from the parser spec (kept alive via keep_alive) for diagnostics
-    // — token display names and candidate rule names in the loud-failure
-    // messages.
+    // Borrowed from the parser spec (kept alive via keep_alive) for the token
+    // display names and candidate rule names in the loud-failure messages.
     const dfa::Vocabulary *vocab = nullptr;
     const std::vector<std::string> *prule_names = nullptr;
 
@@ -782,9 +786,9 @@ struct StreamRuleChunker {
         prule_names = &pspec.rule_names;
         stream = std::make_unique<antlrope::Utf8FileCharStream>(
             path, lenient, block);
-        // The interpreters hold references into the specs (ATN + name lists),
-        // so both specs must outlive this object — see keep_alive on the
-        // binding.
+        // The interpreters hold references into the specs (ATN and name lists),
+        // so both specs must outlive this object (see keep_alive on the
+        // binding).
         lexer = std::make_unique<LexerInterpreter>(lspec.grammar_file_name,
                                                    lspec.vocabulary,
                                                    lspec.rule_names,
@@ -841,7 +845,7 @@ struct StreamRuleChunker {
     }
 
     // "<NAME> \"<text>\" at line L:C" for the offending token. The text is read
-    // from the retained window via our own char stream — NOT Token::getText(),
+    // from the retained window via our own char stream, not Token::getText(),
     // which calls CharStream::size() to bounds-check and so throws on an
     // unbuffered source. It is capped at a UTF-8 codepoint boundary to stay
     // valid UTF-8, and omitted if the token's characters are no longer
@@ -877,11 +881,11 @@ struct StreamRuleChunker {
         return "stream_by_rule: token " + token_desc(la, ttype) +
                " begins no candidate record rule (candidates: " +
                candidate_names() +
-               "). The input must be a directly-adjacent sequence of those "
-               "rules, separated only by lexer-skipped whitespace/comments; "
-               "an on-channel header or separator is not supported. Use "
-               "chunk_by_rule for a whole-input parse, or stream_on_token / "
-               "stream_on_pattern to split on a delimiter.";
+               "). The input must be a directly adjacent sequence of those "
+               "rules, separated only by whitespace or comments that the "
+               "lexer skips; an on-channel header or separator is not "
+               "supported. Use chunk_by_rule for a whole-input parse, or "
+               "stream_on_token or stream_on_pattern to split on a delimiter.";
     }
 
     // Loud-failure diagnostic for a rule that matched empty input, which would
@@ -894,17 +898,17 @@ struct StreamRuleChunker {
         return "stream_by_rule: rule '" + rname +
                "' consumed no tokens at line " + std::to_string(la->getLine()) +
                ":" + std::to_string(la->getCharPositionInLine()) +
-               " — it can match empty input, so the stream cannot advance. "
+               "; it can match empty input, so the stream cannot advance. "
                "Give stream_by_rule a record rule that always consumes at "
                "least one token.";
     }
 
     // Parse up to `n` records. Stops cleanly at EOF; raises
     // (std::runtime_error) if an on-channel token begins no candidate rule, or
-    // a chosen rule consumes nothing — a malformed "file of records" rather
-    // than a silent truncation. Any records already gathered this batch are
-    // flushed first (returned with more= true) so none are lost; the stashed
-    // diagnostic is thrown on the next call.
+    // a chosen rule consumes nothing, so a malformed "file of records" fails
+    // instead of being silently truncated. Any records already gathered this
+    // batch are flushed first (returned with more = true) so none are lost; the
+    // stashed diagnostic is thrown on the next call.
     bool run_batch(size_t n, std::vector<ChunkRec> &out) {
         if (!pending_error.empty()) {  // a flushed batch deferred this error
             done = true;
@@ -938,8 +942,9 @@ struct StreamRuleChunker {
             }
             size_t before = tokens->index();
             // Hold a mark across the parse so UnbufferedTokenStream keeps this
-            // record's tokens alive — root->getStart()/getStop() read below
-            // would otherwise dangle. Released immediately after, freeing them.
+            // record's tokens alive; otherwise root->getStart() and getStop(),
+            // read below, would dangle. It is released immediately after,
+            // which frees them.
             ssize_t mark = tokens->mark();
             ParserRuleContext *root =
                 parser->parse(static_cast<size_t>(chosen));
@@ -980,8 +985,8 @@ struct StreamRuleChunker {
         std::vector<ChunkRec> recs;
         bool more;
         {
-            // Pure C++ (file IO + decode + lex + parse + getText): release the
-            // GIL for the whole batch; only building the result list below
+            // Pure C++ (file IO, decoding, lexing, parsing, getText): release
+            // the GIL for the whole batch; only building the result list below
             // needs it.
             nb::gil_scoped_release release;
             more = run_batch(n, recs);
@@ -1077,9 +1082,9 @@ NB_MODULE(_native, m) {
     nb::class_<LexerSpec>(
         m,
         "LexerSpec",
-        "A deserialized lexer specification — the grammar's vocabulary, name\n"
-        "lists, and ATN — that the native lex/parse entry points run on.\n"
-        "Build one from a generated <Grammar>EventListener rather than\n"
+        "A deserialized lexer specification (the grammar's vocabulary, name\n"
+        "lists, and ATN) used by the native lex and parse entry points.\n"
+        "Obtain one through a generated `<Grammar>EventListener` instead of\n"
         "constructing it directly.")
         .def(nb::init<std::string,
                       std::vector<std::string>,
@@ -1099,9 +1104,9 @@ NB_MODULE(_native, m) {
     nb::class_<ParserSpec>(
         m,
         "ParserSpec",
-        "A deserialized parser specification — the grammar's vocabulary,\n"
-        "rule names, and ATN — that the native parse entry points run on.\n"
-        "Build one from a generated <Grammar>EventListener rather than\n"
+        "A deserialized parser specification (the grammar's vocabulary,\n"
+        "rule names, and ATN) used by the native parse entry points.\n"
+        "Obtain one through a generated `<Grammar>EventListener` instead of\n"
         "constructing it directly.")
         .def(nb::init<std::string,
                       std::vector<std::string>,
@@ -1197,8 +1202,8 @@ NB_MODULE(_native, m) {
           nb::arg("lexer_spec"),
           nb::arg("text"),
           nb::arg("start_rule"),
-          "Diagnostic: parse + walk with a native counting listener (no Python "
-          "crossing).");
+          "Diagnostic: parse and walk the tree with a native counting\n"
+          "listener, without calling into Python.");
     m.def("parse_walk",
           &parse_walk,
           nb::arg("parser_spec"),
@@ -1206,8 +1211,8 @@ NB_MODULE(_native, m) {
           nb::arg("text"),
           nb::arg("start_rule"),
           nb::arg("listener"),
-          "Diagnostic escape hatch: parse + walk the tree, dispatching to a\n"
-          "Python ParseTreeListener (slow per-node FFI path).");
+          "Diagnostic fallback: parse and walk the tree, dispatching each\n"
+          "node to a Python ParseTreeListener (slow per-node FFI path).");
     m.def(
         "parse_events",
         &parse_events,
@@ -1220,7 +1225,7 @@ NB_MODULE(_native, m) {
         "Parse and return (events, errors): a bulk flat int32 event buffer of\n"
         "4*N values (kind, payload, start, stop) as bytes, and a list of\n"
         "SyntaxError diagnostics collected during the parse. Optional\n"
-        "rule_mask/token_mask (lists of indices to keep) filter events\n"
+        "rule_mask and token_mask (lists of indices to keep) filter events\n"
         "natively. The default stderr error listener is suppressed.");
     m.def("parse_stage_times",
           &parse_stage_times,
@@ -1229,7 +1234,7 @@ NB_MODULE(_native, m) {
           nb::arg("text"),
           nb::arg("start_rule"),
           "Diagnostic: dict of per-stage seconds (input_decode, lex_fill,\n"
-          "parse_tree, walk) plus token/event/codepoint counts.");
+          "parse_tree, walk) plus the token, event, and codepoint counts.");
     m.def(
         "lex",
         &lex,
@@ -1252,6 +1257,7 @@ NB_MODULE(_native, m) {
           "Parse (entirely in C++) and return (spans, errors): a flat int32\n"
           "buffer of 3*N values (rule_index, start, stop) for each parse-tree\n"
           "rule kept by rule_mask (None = all), plus a list of SyntaxError\n"
-          "diagnostics. With outermost=True a matched rule's subtree is\n"
-          "skipped. Used for rule-based chunking.");
+          "diagnostics. With outermost=True, the subtree of a matched rule is\n"
+          "not searched, so only top-level occurrences are returned. Used for\n"
+          "rule-based chunking.");
 }

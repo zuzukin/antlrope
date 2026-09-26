@@ -77,9 +77,9 @@ class SyntaxError:
 
 class LexerSpec:
     """
-    A deserialized lexer specification — the grammar's vocabulary, name
-    lists, and ATN — that the native lex/parse entry points run on.
-    Build one from a generated <Grammar>EventListener rather than
+    A deserialized lexer specification (the grammar's vocabulary, name
+    lists, and ATN) used by the native lex and parse entry points.
+    Obtain one through a generated `<Grammar>EventListener` instead of
     constructing it directly.
     """
 
@@ -96,9 +96,9 @@ class LexerSpec:
 
 class ParserSpec:
     """
-    A deserialized parser specification — the grammar's vocabulary,
-    rule names, and ATN — that the native parse entry points run on.
-    Build one from a generated <Grammar>EventListener rather than
+    A deserialized parser specification (the grammar's vocabulary,
+    rule names, and ATN) used by the native parse entry points.
+    Obtain one through a generated `<Grammar>EventListener` instead of
     constructing it directly.
     """
 
@@ -183,7 +183,8 @@ def parse_count(
     parser_spec: ParserSpec, lexer_spec: LexerSpec, text: str, start_rule: int
 ) -> dict:
     """
-    Diagnostic: parse + walk with a native counting listener (no Python crossing).
+    Diagnostic: parse and walk the tree with a native counting
+    listener, without calling into Python.
     """
 
 def parse_walk(
@@ -194,8 +195,8 @@ def parse_walk(
     listener: ParseTreeListener,
 ) -> None:
     """
-    Diagnostic escape hatch: parse + walk the tree, dispatching to a
-    Python ParseTreeListener (slow per-node FFI path).
+    Diagnostic fallback: parse and walk the tree, dispatching each
+    node to a Python ParseTreeListener (slow per-node FFI path).
     """
 
 def parse_events(
@@ -210,7 +211,7 @@ def parse_events(
     Parse and return (events, errors): a bulk flat int32 event buffer of
     4*N values (kind, payload, start, stop) as bytes, and a list of
     SyntaxError diagnostics collected during the parse. Optional
-    rule_mask/token_mask (lists of indices to keep) filter events
+    rule_mask and token_mask (lists of indices to keep) filter events
     natively. The default stderr error listener is suppressed.
     """
 
@@ -219,7 +220,7 @@ def parse_stage_times(
 ) -> dict:
     """
     Diagnostic: dict of per-stage seconds (input_decode, lex_fill,
-    parse_tree, walk) plus token/event/codepoint counts.
+    parse_tree, walk) plus the token, event, and codepoint counts.
     """
 
 def lex(
@@ -245,6 +246,7 @@ def rule_spans(
     Parse (entirely in C++) and return (spans, errors): a flat int32
     buffer of 3*N values (rule_index, start, stop) for each parse-tree
     rule kept by rule_mask (None = all), plus a list of SyntaxError
-    diagnostics. With outermost=True a matched rule's subtree is
-    skipped. Used for rule-based chunking.
+    diagnostics. With outermost=True, the subtree of a matched rule is
+    not searched, so only top-level occurrences are returned. Used for
+    rule-based chunking.
     """

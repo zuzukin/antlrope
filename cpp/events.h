@@ -100,8 +100,8 @@ inline void collect_events(antlr4::tree::ParseTree *root,
             Token *sym = static_cast<tree::TerminalNode *>(node)->getSymbol();
             size_t type = sym->getType();
             bool is_err = tree::ErrorNode::is(*node);
-            // Errors always survive the token mask: a filtered stream that
-            // silently dropped parse failures would be a footgun.
+            // Errors always survive the token mask, so that filtering never
+            // silently hides a parse failure.
             bool keep = is_err || tok_keep == nullptr ||
                         (type < n_toks && tok_keep[type]);
             if (keep) {
@@ -156,8 +156,9 @@ inline void collect_events(antlr4::tree::ParseTree *root,
 
 // Collect the (rule_index, start, stop) character span of each parse-tree rule
 // node whose index is kept by rule_keep (nullptr = all rules). With outermost =
-// true, a matched rule's subtree is not descended into, so only the top-level
-// occurrences are emitted — the building block for rule-based chunking.
+// true, the traversal does not descend into a matched rule's subtree, so only
+// top-level occurrences are emitted. This is the building block for rule-based
+// chunking.
 // Iterative (like collect_events) to avoid deep recursion on tall trees.
 inline void collect_rule_spans(antlr4::tree::ParseTree *root,
                                std::vector<int32_t> &out,
