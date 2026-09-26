@@ -14,9 +14,9 @@
 """
 Turn source character offsets into `(line, column)` positions.
 
-The event stream reports `start`/`stop` as character (codepoint) offsets into the
-source string — the same indices that slice it directly. To report a position to a
-user (e.g. for a parse error) build one [SourceMap][antlrope.SourceMap] over
+The event stream reports `start` and `stop` as character (codepoint) offsets into the
+source string, the same indices that slice it directly. To report a position to a
+user (e.g. for a parse error), build one [SourceMap][antlrope.SourceMap] over
 the source and call [SourceMap.line_col][antlrope.SourceMap.line_col]; the
 newline scan is done once and each lookup is an O(log n) bisect.
 """
@@ -33,7 +33,7 @@ __all__ = [
 
 
 class LineCol(NamedTuple):
-    """A line/column tuple for tracking source locations.
+    """A (line, column) pair that identifies a source location.
 
     Returned by [SourceMap.line_col][antlrope.SourceMap.line_col] and
     [FacadeListener.line_col][antlrope.FacadeListener.line_col].
@@ -41,21 +41,20 @@ class LineCol(NamedTuple):
 
     line: int = 1
     """
-    Line number (1-based)
+    Line number (1-based).
     """
 
     column: int = 0
     """
-    Column number (0-based)
+    Column number (0-based).
     """
 
     def add(self, offset: LineCol) -> LineCol:
         """
-        Adds other line/column offsets to this `LineCol`.
+        Return this position advanced by a relative `offset`.
 
-        If offset line is 1, this simply adds the
-        column, otherwise it adds the line and sets the column
-        from offset.
+        If `offset.line` is 1 (or less), only `offset.column` is added. Otherwise the
+        line advances by `offset.line - 1` and the column is taken from `offset`.
         """
         if offset.line <= 1:
             return LineCol(self.line, self.column + offset.column)
@@ -64,9 +63,9 @@ class LineCol(NamedTuple):
 
 
 class SourceMap:
-    """Translates between character offsets and line/columns for source text
+    """Translate between character offsets and line and column positions in source text.
 
-    Line numbers are numbered from 1 and columns numbered from 0.
+    Lines are numbered from 1 and columns from 0.
     """
 
     __slots__ = ("_line_starts",)
@@ -98,7 +97,7 @@ class SourceMap:
         return LineCol(line_idx + 1, offset - self._line_starts[line_idx])
 
     def offset(self, line: int, column: int = 0) -> int:
-        """Return the character offset given line and column.
+        """Return the character offset of a line and column.
 
         The inverse of [line_col][antlrope.SourceMap.line_col]:
         `offset(*line_col(o)) == o` for any valid offset `o`.

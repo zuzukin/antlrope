@@ -32,7 +32,7 @@ def register(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]) ->
     """Add the `rules` subcommand to the top-level `antlrope` parser."""
     parser = subparsers.add_parser(
         "rules",
-        help="List a parser's rule names (for start_rule= and the rule chunkers).",
+        help="List a parser's rule names (for start_rule and the rule-based chunkers).",
         description="List the parser rule names of a generated parser module, "
         "as accepted by walk(start_rule=...), chunk_by_rule, and stream_by_rule.",
     )

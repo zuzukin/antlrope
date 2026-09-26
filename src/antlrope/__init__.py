@@ -15,15 +15,16 @@
 """
 **antlrope**: a fast, C++-accelerated ANTLR Python runtime for target-agnostic grammars.
 
-Lexing and parsing runs in the ANTLR4 C++ runtime; a single bulk, filtered event stream crosses
-into Python instead of a per-node parse-tree walk.
+Lexing and parsing run in the ANTLR4 C++ runtime, and a single bulk, filtered event
+stream crosses into Python instead of a per-node parse-tree walk.
 
 Basic usage:
 
 1. Generate your parser with the stock ANTLR tool (`-Dlanguage=Python3`)
-2. Generate a facade class with `antlrope`
+2. Generate a facade class with `antlrope gen`
 3. Subclass the `<Grammar>EventListener` it emits
-4. Call [listener.walk(...)][antlrope.FacadeListener.walk] (the lexer/parser are baked in).
+4. Call [listener.walk(...)][antlrope.FacadeListener.walk] (the generated class already
+   knows its lexer and parser).
 """
 
 from __future__ import annotations

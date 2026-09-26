@@ -8,14 +8,20 @@ follows semantic versioning (see the version policy in
 ## [1.0.2] - Unreleased
 
 ### Changed
-- Rewrote the prose of the README, the documentation site, and `llms.txt` in plainer,
-  more natural English. Technical content is unchanged.
+- Rewrote the prose of the README, the documentation site, `llms.txt`, docstrings,
+  CLI help text, and code comments in plainer, more natural English. Technical
+  content is unchanged.
+- The `antlrope check` success line now reads `OK: no …` instead of `OK — no …`.
 
 ### Fixed
 - Documentation errors: the getting-started `antlrope gen` command used a slash
   path instead of a dotted module path; the JSON example page called a class that
   does not exist; the README described rule events as having no span; several
   broken links and anchors.
+- Docstrings and help text that disagreed with the code: `FacadeListener.sourcename`
+  (`walk` takes no `sourcename`), the `stream_on_pattern` `sourcename` default,
+  `LineCol.add`, the undocumented `text` argument of `walk`, and the exit
+  statuses of `antlrope check` and `antlrope up-to-date`.
 
 ## [1.0.1] - 2026-07-25
 

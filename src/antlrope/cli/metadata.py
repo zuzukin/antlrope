@@ -61,8 +61,8 @@ def relpath_or_abs(path: str, start: str) -> str:
     """`os.path.relpath`, falling back to the absolute path when there isn't one.
 
     On Windows there is no relative path between different drives (relpath
-    raises `ValueError`); an absolute path keeps the origin header usable —
-    `regen` / `up-to-date` join recorded paths with `os.path.join`, which yields
+    raises `ValueError`). An absolute path keeps the origin header usable:
+    `regen` and `up-to-date` join recorded paths with `os.path.join`, which yields
     the absolute path unchanged.
     """
     try:
@@ -74,7 +74,7 @@ def relpath_or_abs(path: str, start: str) -> str:
 def input_digests(*qualnames: str) -> list[tuple[str, str]]:
     """For each importable module path, return (cwd-relative file path, SHA256).
 
-    Modules without a `__file__` (namespace/frozen) are skipped. A path with no
+    Modules without a `__file__` (namespace or frozen) are skipped. A path with no
     relative form from the cwd (another Windows drive) is recorded absolute.
     """
     cwd = os.getcwd()
@@ -102,7 +102,7 @@ def render(meta: Metadata) -> str:
 def parse(text: str) -> Metadata | None:
     """Extract a `Metadata` block from the leading comment lines of `text`.
 
-    Returns `None` when there is no antlrope banner or the required version/command
+    Returns `None` when there is no antlrope banner or the required version and command
     lines are absent (e.g. a facade generated without the CLI).
     """
     version: str | None = None

@@ -15,9 +15,10 @@
 """The `up-to-date` subcommand: check a generated facade against its inputs.
 
 Re-hashes the input modules recorded in a facade's origin header (see
-antlrope.cli.metadata) and compares them — plus the antlrope version — to the
-recorded values. Pure hashing: no import or parse of the grammar. Exit status is
-0 when current, 1 when stale (CI/Make-friendly), 2 on a usage error.
+antlrope.cli.metadata) and compares them, along with the antlrope version, to the
+recorded values. It only hashes files and never imports or parses the grammar. The
+exit status is 0 when the facade is current, 1 when it is stale, and 2 on a usage
+error, which suits CI and Make.
 """
 
 from __future__ import annotations
@@ -39,8 +40,9 @@ def register(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]) ->
         description=dedent(
             """
             Compare the input SHA256 hashes and antlrope version recorded in
-            a generated facade against the current files. Zero exit status
-            if up-to-date.
+            a generated facade against the current files. Exits with status 0
+            if it is up to date, 1 if it is stale, and 2 on a usage error or if
+            the file cannot be read or has no antlrope metadata.
             """
         ),
     )

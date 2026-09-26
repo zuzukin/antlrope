@@ -14,7 +14,7 @@
 
 """The `antlrope` command-line interface.
 
-`antlrope` is a command group; the entry point lives in
+`antlrope` is a command group. The entry point lives in
 [main][antlrope.cli.main], and each subcommand is its own module that registers
-itself there (today only [generate][antlrope.cli.generate], the `gen` command).
+itself there (`gen`, `regen`, `up-to-date`, `check`, `rules`, and `tokens`).
 """

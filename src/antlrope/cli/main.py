@@ -76,10 +76,10 @@ def main(argv: list[str] | None = None) -> int:
     try:
         return args.main(args)
     except (ImportError, AttributeError, OSError, ValueError) as e:
-        # Backstop for expected user-input failures — an unimportable module, a
-        # module that isn't a generated parser, an unreadable/unwritable file —
-        # so the CLI prints one clean line instead of a traceback. Genuine bugs
-        # (any other exception type) still traceback.
+        # Backstop for expected user-input failures (an unimportable module, a
+        # module that isn't a generated parser, a file that can't be read or
+        # written), so the CLI prints one clean line instead of a traceback.
+        # Genuine bugs (any other exception type) still traceback.
         print(f"antlrope {args.command}: {e}", file=sys.stderr)
         return 2
 

@@ -14,17 +14,17 @@
 
 """The `gen` subcommand: generate a grammar-specific event-listener facade.
 
-Reads `ruleNames` + token name lists from an already-generated ANTLR Python parser
-module (no annotated grammar, no extra inputs) and emits a `<Grammar>EventListener`
-base class: named `enter<Rule>` / `exit<Rule>` no-op stubs, `visitTerminal` /
-`visitError` stubs, token-type constants, and a `walk` method that runs the bulk
-native event stream. The base is a subclass of
-[FacadeListener][antlrope.FacadeListener], so callbacks can call
-`self.line_col()` for the current event's source position.
+Reads `ruleNames` and the token name lists from an already-generated ANTLR Python
+parser module (no annotated grammar, no extra inputs) and emits a
+`<Grammar>EventListener` base class with no-op `enter<Rule>`, `exit<Rule>`,
+`visitTerminal`, and `visitError` stubs and the token-type constants. The class
+subclasses [FacadeListener][antlrope.FacadeListener], from which it inherits
+`walk` (which runs the bulk native event stream) and `self.line_col()` (the
+current event's source position).
 
-The generated interface mirrors the stock ANTLR listener so consumers write the same
-code; the difference is that callbacks are driven by a flat event buffer rather
-than a Python parse-tree walk. Usage (console script or module):
+The generated interface mirrors the stock ANTLR listener, so consumers write the
+same code. The difference is that a flat event buffer drives the callbacks instead
+of a Python parse-tree walk. Usage (console script or module):
 
     antlrope gen mypkg.generated.MyParser My -o my_listener.py
 """
@@ -49,7 +49,7 @@ from antlrope.cli.metadata import (
 
 
 def _cap_first(name: str) -> str:
-    """Capitalizes first character of name (leaving the rest the same)"""
+    """Return `name` with its first character uppercased and the rest unchanged."""
     return name[0].upper() + name[1:]
 
 
@@ -63,10 +63,10 @@ def _rule_names_block(rule_names: list[str]) -> str:
     """Render the `ruleNames` class attribute as ruff/black-formatted source.
 
     A single line when the whole statement fits the line-length budget, otherwise
-    the exploded one-item-per-line form with the trailing comma ruff/black would
-    add (which then keeps it stable via the magic trailing comma). Rule names are
-    ANTLR identifiers, so the double-quoted literals need no escaping — `repr()`
-    would emit single quotes and churn under the formatter.
+    the one-item-per-line form with the trailing comma that ruff and black would
+    add (the magic trailing comma then keeps it stable). Rule names are ANTLR
+    identifiers, so the double-quoted literals need no escaping. `repr()` would
+    emit single quotes, which the formatter would then rewrite.
     """
     indent = "    "
     prefix = f"{indent}ruleNames: ClassVar[list[str]] = "
@@ -81,13 +81,13 @@ def _rule_names_block(rule_names: list[str]) -> str:
 def _derive_lexer(parser_qualname: str) -> str:
     """Derive the lexer module path from the parser's, by ANTLR convention.
 
-    ANTLR names a combined grammar's classes `<Grammar>Lexer` / `<Grammar>Parser`
+    ANTLR names a combined grammar's classes `<Grammar>Lexer` and `<Grammar>Parser`
     in same-named modules, so the lexer path is the parser path with the trailing
     `Parser` replaced by `Lexer` (e.g. `pkg.JSONParser` -> `pkg.JSONLexer`).
 
     Raises:
         ValueError: If the parser module path's final component does not end in
-            `Parser`, so the lexer cannot be derived — pass `--lexer` explicitly.
+            `Parser`, so the lexer cannot be derived. Pass `--lexer` explicitly.
     """
     if not parser_qualname.rsplit(".", 1)[-1].endswith("Parser"):
         raise ValueError(
@@ -107,12 +107,12 @@ def _import_class(qualname: str) -> type:
 def token_constants(parser_cls: type) -> list[tuple[str, int]]:
     """Return the facade's `(name, token_type)` constants for a parser class.
 
-    ANTLR names anonymous string-literal tokens positionally — `T__0` is the
-    first such token (token type 1), `T__1` the second (type 2), and so on — so
-    the name does NOT equal the token-type value. Read those names straight off
+    ANTLR names anonymous string-literal tokens positionally: `T__0` is the
+    first such token (token type 1), `T__1` the second (type 2), and so on. The
+    name therefore does not equal the token-type value. These names are read from
     the generated parser, which already declares them, so the facade's constants
-    line up with the lexer/parser the user has rather than a synthesized name.
-    Each token type maps to its symbolic name when ANTLR gave one, else the
+    match the user's lexer and parser instead of using synthesized names. Each
+    token type maps to its symbolic name when ANTLR gave one, and otherwise to the
     parser's own positional `T__n` name for the anonymous literal.
     """
     literal_consts = {
@@ -123,7 +123,7 @@ def token_constants(parser_cls: type) -> list[tuple[str, int]]:
     tok_consts: list[tuple[str, int]] = []
     for ttype, sym in enumerate(parser_cls.symbolicNames):
         if ttype == 0:
-            continue  # type 0 is unused / EOF sentinel
+            continue  # type 0 is ANTLR's invalid token type (EOF is -1)
         if sym and sym != "<INVALID>":
             tok_consts.append((sym, ttype))
         elif ttype in literal_consts:
@@ -143,7 +143,7 @@ def generate(
 
     if lexer_qualname is None:
         lexer_qualname = _derive_lexer(parser_qualname)
-    # Import the lexer too so a wrong/missing path fails here, at generation time,
+    # Import the lexer too so a wrong or missing path fails here, at generation time,
     # with a clear error rather than as an ImportError in the user's generated file.
     _import_class(lexer_qualname)
     parser_clsname = parser_qualname.rsplit(".", 1)[-1]
@@ -153,7 +153,7 @@ def generate(
 
     tok_consts = token_constants(parser_cls)
 
-    # token_lines / rule_methods carry their own class-body indentation; the
+    # token_lines and rule_methods carry their own class-body indentation; the
     # template's placeholders sit at the base column so the content lands right.
     token_lines = "\n".join(f"    {name} = {ttype}" for name, ttype in tok_consts)
     rule_methods = "".join(
@@ -170,11 +170,12 @@ def generate(
     rule_names_block = _rule_names_block(rule_names)
 
     # The origin header (antlrope.cli.metadata) when the CLI provides one, else
-    # the bare banner — keeping a direct generate() call deterministic + version-free.
+    # the bare banner, which keeps a direct generate() call deterministic and free
+    # of version details.
     header = metadata if metadata is not None else BANNER
 
     # dedent() must run before .format(): an f-string would interpolate the
-    # multi-line token_lines/rule_methods first, and their lower indentation would
+    # multi-line token_lines and rule_methods first, and their lower indentation would
     # then throw off dedent's common-prefix calculation.
     return dedent(
         '''\
@@ -225,7 +226,7 @@ def generate(
 
 
 def add_gen_arguments(parser: argparse.ArgumentParser) -> None:
-    """Add the `gen` positional/optional arguments (shared with `regen`)."""
+    """Add the `gen` positional and optional arguments (shared with `regen`)."""
     parser.add_argument(
         "parser_module",
         metavar="<parser-module>",
@@ -233,7 +234,10 @@ def add_gen_arguments(parser: argparse.ArgumentParser) -> None:
         "(e.g. mypkg.generated.MyParser).",
     )
     parser.add_argument(
-        "grammar", metavar="<name>", help="Grammar name prefix for the facade class."
+        "grammar",
+        metavar="<name>",
+        help="Grammar name used to prefix the facade class. It is passed through "
+        "str.capitalize(), so JSON gives JsonEventListener.",
     )
     parser.add_argument(
         "--lexer",
@@ -288,7 +292,7 @@ def _build_metadata(
 def run_gen(
     parser_module: str, grammar: str, lexer: str | None, output: str | None
 ) -> int:
-    """Generate the facade (with an origin header) and write it to `output`/stdout."""
+    """Generate the facade (with an origin header) and write it to a file or stdout."""
     lexer_qualname = lexer or _derive_lexer(parser_module)
     metadata = _build_metadata(parser_module, grammar, lexer, lexer_qualname, output)
     source = generate(parser_module, grammar, lexer, metadata=metadata)

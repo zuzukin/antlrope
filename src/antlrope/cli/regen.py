@@ -41,7 +41,8 @@ def register(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]) ->
         description=dedent(
             """
             Re-run the `gen` command recorded in a generated facade's
-            metadata header, from the recorded run directory, overwriting the file.
+            metadata header. The command runs from the recorded run directory
+            and overwrites the file.
             """
         ),
     )
@@ -84,7 +85,7 @@ def main(args: argparse.Namespace) -> int:
     gen_args = arg_parser.parse_args(tokens[2:])
 
     # Run from the recorded run directory (relative to the file), with that directory
-    # importable — mirroring the original `PYTHONPATH=<rundir>` invocation. The output
+    # importable, mirroring the original `PYTHONPATH=<rundir>` invocation. The output
     # path in the command is relative to that directory, so it lands back on the file.
     base = os.path.normpath(
         os.path.join(os.path.dirname(os.path.abspath(args.file)), meta.rundir)

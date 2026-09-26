@@ -33,8 +33,8 @@ def register(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]) ->
     parser = subparsers.add_parser(
         "tokens",
         help="List a parser's token types and names (the facade's constants).",
-        description="List the token type -> name map of a generated parser module: "
-        "symbolic names plus the positional T__n names of anonymous literals, "
+        description="List the token types and names of a generated parser module: "
+        "the symbolic names and the positional T__n names of anonymous literals, "
         "matching the generated facade's token-type constants.",
     )
     parser.add_argument(

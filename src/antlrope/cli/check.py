@@ -15,20 +15,20 @@
 """The `check` subcommand: flag grammars the ATN interpreter cannot run faithfully.
 
 Antlrope drives the interpreted ATN, which does not execute target-language code
-embedded in a grammar — semantic predicates (`{...}?`) and embedded actions
+embedded in a grammar: semantic predicates (`{...}?`) and embedded actions
 (`{...}`). A grammar whose parse depends on them mis-parses silently (see the
 "Performance & limitations" docs). This command scans the serialized ATNs of a
-generated parser/lexer pair for those constructs and reports the rules that carry
+generated parser and lexer for those constructs and reports the rules that carry
 them, exiting non-zero when any are found.
 
 What is (and is not) flagged:
 
 - parser ATN: semantic-predicate and embedded-action transitions. Precedence
-  predicates (from left-recursive rules) are NOT flagged — the interpreter
-  evaluates those itself.
-- lexer ATN: semantic predicates and *custom* `{...}` lexer actions. The built-in
+  predicates (from left-recursive rules) are not flagged, because the interpreter
+  evaluates them itself.
+- lexer ATN: semantic predicates and custom `{...}` lexer actions. The built-in
   lexer commands (`-> skip`, `-> channel(...)`, `-> mode(...)`, `-> more`, ...)
-  compile to actions the interpreter executes, so they are NOT flagged.
+  compile to actions the interpreter executes, so they are not flagged.
 """
 
 from __future__ import annotations
@@ -92,13 +92,14 @@ def register(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]) ->
     """Add the `check` subcommand to the top-level `antlrope` parser."""
     parser = subparsers.add_parser(
         "check",
-        help="Check a grammar for semantic predicates / embedded actions.",
+        help="Check a grammar for semantic predicates and embedded actions.",
         description=dedent(
             """
-            Scan a generated parser/lexer pair for semantic predicates and
-            embedded actions, which the interpreted ATN cannot execute — a
-            grammar whose parse depends on them mis-parses silently under
-            antlrope. Zero exit status if the grammar is free of them.
+            Scan a generated parser and lexer for semantic predicates and
+            embedded actions. The interpreted ATN cannot execute them, so a
+            grammar whose parse depends on them silently mis-parses under
+            antlrope. Exits with status 0 if none are found, 1 if any are
+            found, and 2 on a usage error or if a module cannot be imported.
             """
         ),
     )
@@ -134,10 +135,10 @@ def main(args: argparse.Namespace) -> int:
             print(f"  {finding}")
         print(
             "  The interpreted ATN cannot execute these, so parses that depend on\n"
-            f"  them silently mis-parse. See {_DOCS_URL} — use the official\n"
-            "  antlr4-python3-runtime for this grammar, or restructure it to be\n"
-            "  predicate/action-free."
+            f"  them silently mis-parse. See {_DOCS_URL}. Use the official\n"
+            "  antlr4-python3-runtime for this grammar, or restructure it to avoid\n"
+            "  predicates and actions."
         )
         return 1
-    print(f"{args.parser_module}: OK — no semantic predicates or embedded actions")
+    print(f"{args.parser_module}: OK: no semantic predicates or embedded actions")
     return 0
