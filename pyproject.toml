@@ -134,6 +134,11 @@ target-version = "py312"
 # hand-tweaked — formatting it here would just churn against stubgen output).
 extend-exclude = ["examples/*/generated", "vendor", "build", "build-asan", "site", "*.pyi"]
 
+[tool.ruff.format]
+# Ruff 0.16 also formats Python code blocks in Markdown. The doc examples are
+# deliberately compact and hand-aligned, so leave them alone.
+exclude = ["*.md"]
+
 [tool.ruff.lint]
 # A pragmatic core: pyflakes/pycodestyle (E, F, W), import sorting (I), pyupgrade
 # (UP), bugbear (B), comprehensions (C4), simplify (SIM), and Ruff's own lints
