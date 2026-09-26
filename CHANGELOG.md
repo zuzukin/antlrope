@@ -7,6 +7,12 @@ follows semantic versioning (see the version policy in
 
 ## [1.0.2] - Unreleased
 
+This release is mostly about documentation. Claude Opus 5.5 reviewed the docs,
+docstrings, CLI help, and comments, most of which earlier Claude models had
+written, and rewrote awkward or unidiomatic prose in plainer English. The review
+also found and fixed factual errors and performance figures that disagreed
+between pages.
+
 ### Changed
 - Rewrote the prose of the README, the documentation site, `llms.txt`, docstrings,
   CLI help text, and code comments in plainer, more natural English. Technical
