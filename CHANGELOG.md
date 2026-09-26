@@ -5,7 +5,7 @@ All notable changes to this project are documented here. The format is based on
 follows semantic versioning (see the version policy in
 [CONTRIBUTING.md](CONTRIBUTING.md)).
 
-## [1.0.2] - Unreleased
+## [1.0.2] - 2026-09-26
 
 This release is mostly about documentation. Claude Opus 5.5 reviewed the docs,
 docstrings, CLI help, and comments, most of which earlier Claude models had
