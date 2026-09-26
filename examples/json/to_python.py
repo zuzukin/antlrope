@@ -14,11 +14,11 @@
 
 """Example: reconstruct a Python object from JSON using the generated facade.
 
-Subclasses the generated `JsonEventListener` and overrides only the rule
-enter/exit callbacks and `visitTerminal` it needs. Demonstrates the typical shape
-of a consumer: a small value stack driven by the bulk event stream, with token
-text recovered by the runtime via index slicing (no node objects, no per-node FFI
-crossings).
+Subclasses the generated `JsonEventListener` and overrides only the
+`enter<Rule>`/`exit<Rule>` callbacks and `visitTerminal` that it needs.
+Demonstrates the typical shape of a consumer: a small value stack driven by the
+bulk event stream, with token text recovered by the runtime via index slicing (no
+node objects, no per-node FFI crossings).
 
 Run from this directory:
 
@@ -33,8 +33,8 @@ import sys
 from json_listener import JsonEventListener
 
 # Scalar token types (see the generated facade's token-type constants). The
-# anonymous literals follow ANTLR's positional naming: 'true'/'false'/'null' are
-# token types 7/8/9, named T__6/T__7/T__8.
+# anonymous literals follow ANTLR's positional naming: 'true', 'false', and
+# 'null' are token types 7, 8, and 9, named T__6, T__7, and T__8.
 _TRUE, _FALSE, _NULL = (
     JsonEventListener.T__6,
     JsonEventListener.T__7,
@@ -49,8 +49,8 @@ class JsonValueBuilder(JsonEventListener):
     """Rebuild the parsed JSON document as native Python objects."""
 
     def __init__(self) -> None:
-        # Stack of partially-built containers. A pending key for the enclosing
-        # object is carried as ("key", value) handling via _expect_key.
+        # Stack of partially built containers. Object keys wait on _keys until
+        # their value arrives; _expect_key marks that the next STRING is a key.
         self._stack: list = []
         self._keys: list = []
         self._expect_key = False
@@ -77,7 +77,7 @@ class JsonValueBuilder(JsonEventListener):
 
     def visitTerminal(self, token_type: int, text: str) -> None:
         if token_type == _STRING:
-            value = json.loads(text)  # unquote + unescape
+            value = json.loads(text)  # unquote and unescape
             if self._expect_key:
                 self._keys.append(value)
                 self._expect_key = False

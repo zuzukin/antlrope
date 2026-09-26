@@ -18,14 +18,14 @@ Run once per runtime variant (rebuild `_native` against each, then run this):
 
   * pristine upstream runtime (no patches),
   * Patch 1 only (lock-free DFA-edge reads),
-  * Patch 1 + Patch 2 (per-DFA write locks).
+  * Patch 1 and Patch 2 (per-DFA write locks).
 
 Two measurements, matching the two axes the patches target:
 
-  * **single-thread parse** — best-of-N `parse_events` over one large in-memory
-    JSON document. Isolates Patch 1 (the lexer DFA-edge read hot path).
-  * **shared-spec parallel scaling** — the SAME cached spec parsed across a thread
-    pool vs serially. Isolates Patch 2 (per-DFA write locks): how well concurrent
+  * single-thread parse: best-of-N `parse_events` over one large in-memory JSON
+    document. Isolates Patch 1 (the lexer DFA-edge read hot path).
+  * shared-spec parallel scaling: the same cached spec parsed across a thread
+    pool and serially. Isolates Patch 2 (per-DFA write locks): how well concurrent
     parses that share one ATN overlap.
 
 Reports one labelled line per measurement so several runs can be compared.

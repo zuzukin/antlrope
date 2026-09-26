@@ -14,11 +14,11 @@
 
 """Build and run the AddressSanitizer C++ harness (`pixi run asan-test`).
 
-Extracts the example grammars' serialized ATN + metadata into a generated
+Extracts the example grammars' serialized ATNs and metadata into a generated
 `grammar_data.h`, then builds and runs `tests/asan/harness.cpp` with ASan over a
-spread of inputs. This drives the vendored runtime + cpp/events.h the way the
-binding does, with no Python/dyld friction — so it works on macOS and Linux
-alike. CI additionally runs the real suite under ASan on Linux (asan_pytest.py).
+range of inputs. It drives the vendored runtime and cpp/events.h the way the
+binding does but without Python or dyld, so it works on both macOS and Linux. CI
+also runs the real suite under ASan on Linux (asan_pytest.py).
 """
 
 from __future__ import annotations
@@ -34,8 +34,8 @@ ASAN_DIR = ROOT / "tests" / "asan"
 BUILD_DIR = ASAN_DIR / "build"
 
 # (display name, sys.path dir, lexer module, parser module, start rule, inputs).
-# Inputs deliberately include single-token / empty cases that force a decision to
-# look ahead at EOF — the path that exposed the DFA-edge overflow.
+# Inputs deliberately include single-token and empty cases that force a decision
+# to look ahead at EOF, the path that exposed the DFA-edge overflow.
 _GRAMMARS = [
     (
         "JSON",
@@ -142,7 +142,7 @@ def main() -> int:
     # Compile in a single invocation rather than via CMake: a CMake-linked binary
     # mis-orders the ASan runtime initializer on macOS and deadlocks at startup,
     # whereas a one-shot build links it correctly. Uses the environment's compiler
-    # ($CXX from the pixi cxx-compiler — clang on macOS, gcc on Linux).
+    # ($CXX from the pixi cxx-compiler: clang on macOS, gcc on Linux).
     src = ROOT / "vendor" / "antlr4-cpp" / "src"
     sources = sorted(str(p) for p in src.rglob("*.cpp"))
     # On macOS use the system clang: its ASan runtime tracks the OS, whereas the

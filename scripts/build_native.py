@@ -19,10 +19,10 @@ With `editable.rebuild = false`, the extension is not rebuilt on import; run thi
 what scikit-build-core's rebuild hook would: an incremental `cmake --build`
 followed by `cmake --install` into the environment's site-packages.
 
-This deliberately drives cmake directly rather than reinstalling via uv/pip — a uv
-editable reinstall serves a cached archive and does not reliably pick up C++
-changes, whereas `cmake --build` tracks source mtimes and rebuilds only what
-changed.
+This deliberately drives cmake directly rather than reinstalling via uv or pip,
+because a uv editable reinstall serves a cached archive and does not reliably pick
+up C++ changes, whereas `cmake --build` tracks source mtimes and rebuilds only
+what changed.
 """
 
 from __future__ import annotations
@@ -37,7 +37,7 @@ import sysconfig
 def main() -> int:
     build_dirs = sorted(glob.glob("build/*/"))
     if not build_dirs:
-        sys.exit("No build/ directory found — run `pixi install` first.")
+        sys.exit("No build/ directory found; run `pixi install` first.")
 
     purelib = sysconfig.get_paths()["purelib"]
 
@@ -45,7 +45,7 @@ def main() -> int:
     # beside the current one), pick the dir that builds the extension actually
     # installed in this environment. The editable install is built abi3
     # (`wheel.py-api = "cp312"` in pyproject), so it lands `_native.abi3.so` whatever
-    # the running interpreter's version tag — matching on the interpreter's
+    # the running interpreter's version tag. Matching on the interpreter's
     # `EXT_SUFFIX` would pick the wrong (or a stale `cp3XX`) dir, rebuild it, and
     # leave the loaded `_native.abi3.so` untouched. Resolve by the installed file's
     # name instead, the same way scripts/asan_pytest.py does.

@@ -16,7 +16,8 @@
 
 Generates a JSON array of many flat objects (no nested braces, no braces inside
 strings) so all three chunkers produce the *same* N object chunks, and compares
-the cost of producing them — both the underlying scan/parse and the full chunking.
+the cost of producing them, both for the underlying scan or parse and for the full
+chunking.
 Run with:
 
     pixi run python scripts/bench_chunking.py

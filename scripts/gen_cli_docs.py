@@ -15,10 +15,10 @@
 """Generate the command reference in `docs/reference/cli.md` from live `--help`.
 
 Builds the real argparse parser, captures `format_help()` for `antlrope` and each
-subcommand, and reformats it to Markdown — section labels (`options:`, `positional
-arguments:`) become `###` headers, the rest goes into `text` code blocks — then
-rewrites the region between the `gen-cli-help` markers in cli.md. Because it reads
-the actual CLI, the reference can never drift from it.
+subcommand, and reformats it as Markdown (section labels such as `options:` and
+`positional arguments:` become `###` headers and the rest goes into `text` code
+blocks). It then rewrites the region between the `gen-cli-help` markers in cli.md.
+Because it reads the actual CLI, the reference can never drift from it.
 
 Run `pixi run gen-cli-docs`; pass `--check` to fail (exit 1) when the committed doc
 is out of date instead of rewriting it.
@@ -110,7 +110,7 @@ def main(argv: list[str] | None = None) -> int:
     if check:
         if current != updated:
             sys.stderr.write(
-                "docs/reference/cli.md is out of date — run `pixi run gen-cli-docs`\n"
+                "docs/reference/cli.md is out of date; run `pixi run gen-cli-docs`\n"
             )
             return 1
         return 0

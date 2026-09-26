@@ -16,10 +16,11 @@
 
 `scripts/` is in Pyright's `include` (see [tool.pyright]), so `pixi run typecheck`
 checks this file. If a public name stops being importable from the top-level package
-under a type checker — e.g. a re-export or `__all__` entry is dropped — this fails.
+under a type checker (for example, because a re-export or `__all__` entry is
+dropped), this fails.
 
 antlrope ships `py.typed` with full type information, so a correctly configured
-Pyright/mypy resolves all of these against an installed wheel (verified). If yours
+Pyright or mypy resolves all of these against an installed wheel. If yours
 reports `reportMissingImports`, point it at the environment where antlrope is
 installed (see docs/installation.md, "Type checking"). This module is never run.
 """

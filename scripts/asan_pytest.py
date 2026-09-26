@@ -20,7 +20,7 @@ pytest with the ASan runtime preloaded. Unlike the portable C++ harness
 real test suite.
 
 Linux only: macOS's hardened conda Python strips `DYLD_INSERT_LIBRARIES`, so ASan
-can't install its interceptors there. On macOS this skips with a note — use
+can't install its interceptors there. On macOS this skips with a note; use
 `pixi run asan-test` instead.
 """
 
@@ -100,9 +100,10 @@ def main() -> int:
         shutil.copy2(asan_so, installed)
         env = dict(os.environ)
         env["LD_PRELOAD"] = _find_libasan(asan_so)
-        # Disable leak + container-overflow checks: Python and its allocations are
-        # not instrumented, so both are noisy/false here; we want use-after-free
-        # and out-of-bounds, which is what fired.
+        # Disable leak and container-overflow checks: Python and its allocations
+        # are not instrumented, so both report false positives here. We only want
+        # use-after-free and out-of-bounds errors, which are the ones this run has
+        # caught.
         env["ASAN_OPTIONS"] = (
             "detect_leaks=0:detect_container_overflow=0:abort_on_error=1"
         )

@@ -40,8 +40,8 @@ RETURN_TYPES = {
     "parse_events": "tuple[bytes, list[SyntaxError]]",
     "lex": "tuple[bytes, list[SyntaxError]]",
     "rule_spans": "tuple[bytes, list[SyntaxError]]",
-    # next_batch — a method on both StreamChunker and StreamRuleChunker (so it
-    # matches more than once); the regex below is indentation-agnostic.
+    # next_batch is a method on both StreamChunker and StreamRuleChunker, so it
+    # matches more than once; the regex below is indentation-agnostic.
     "next_batch": "tuple[list[tuple[int, int, int, str]], bool]",
 }
 
@@ -98,7 +98,7 @@ def main() -> int:
         if n < 1:
             raise SystemExit(
                 f"stubgen post-process: expected at least one '{name}(...) -> object', "
-                f"found {n}. nanobind output changed — update scripts/stubgen.py."
+                f"found {n}. nanobind output changed; update scripts/stubgen.py."
             )
 
     STUB.write_text(HEADER + text, encoding="utf-8")

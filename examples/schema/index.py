@@ -12,30 +12,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Example: index a schema file's type definitions — three ways.
+"""Example: index a schema file's type definitions in three ways.
 
 A `.schema` file is a flat sequence of independent `message` and `enum`
-definitions (see `Schema.g4` and `sample.schema`). This program builds an index —
-every type's name, kind, and member names — and shows three ways to run the same
+definitions (see `Schema.g4` and `sample.schema`). This program builds an index of
+every type's name, kind, and member names, and shows three ways to run the same
 `SchemaEventListener` over the input:
 
-  1. whole-file walk   — one C++ parse of the entire file (the everyday path);
-  2. parallel by rule  — chunk on grammar structure, parse the pieces across cores;
-  3. streaming by rule — the same, reading the file incrementally (bounded memory).
+  1. whole-file walk: one C++ parse of the entire file (the everyday path);
+  2. parallel by rule: chunk on grammar structure, parse the pieces across cores;
+  3. streaming by rule: the same, reading the file incrementally (bounded memory).
 
-Which to reach for:
+Which one to use:
 
   * For a file you can hold in memory with light per-record work, the single walk
-    (1) is simplest and usually fastest — no chunking overhead, and one parse beats
-    many.
-  * Use (2) when the *per-definition* Python work is heavy enough that spreading it
+    (1) is simplest and usually fastest, because it has no chunking overhead and
+    one parse is cheaper than many.
+  * Use (2) when the per-definition Python work is heavy enough that spreading it
     across cores wins despite the GIL on event dispatch (the native parses overlap).
   * Use (3) when the file is too large to hold in memory: it never materializes the
     whole source or token stream.
 
-Each definition is self-contained and may span many lines, so newline/regex
-splitting won't do — but it is exactly one `messageDef` or `enumDef`, which is what
-lets `chunk_by_rule` / `stream_by_rule` cut on real grammar structure.
+Each definition is self-contained and may span many lines, so splitting on newlines
+or a regex does not work. However, each definition is exactly one `messageDef` or
+`enumDef`, which lets `chunk_by_rule` and `stream_by_rule` split on the grammar's
+structure.
 
 Run from this directory:
 
@@ -66,22 +67,22 @@ class TypeDef:
 
 
 class SchemaIndexer(SchemaEventListener):
-    """Collect a `TypeDef` for every message/enum definition walked.
+    """Collect a `TypeDef` for every message or enum definition walked.
 
-    There are no node objects: state is reconstructed from the *order* of events,
-    the usual antlrope listener pattern — but here the scope helpers carry the
-    weight. `enter`/`exit{Message,Enum}Def` bracket each definition; inside it,
-    `current_rule()` says which kind of `ID` we're looking at, so there is no
-    `{`-seen flag and no field-name lookahead:
+    There are no node objects: state is reconstructed from the order of events, as
+    in any antlrope listener. Here the scope helpers do most of the work.
+    `enter{Message,Enum}Def` and `exit{Message,Enum}Def` bracket each definition.
+    Inside it, `current_rule()` says which kind of `ID` we're looking at, so there
+    is no `{`-seen flag and no field-name lookahead:
 
-      * an `ID` directly under `messageDef` / `enumDef` is the type's own name —
+      * an `ID` directly under `messageDef` or `enumDef` is the type's own name
         or, for an `enum` (whose constants are bare IDs), one of its members;
       * an `ID` inside a `field` (`fieldType ID ';'`) is a message field's name;
-      * an `ID` inside a `fieldType` is the field's *type* — not part of the index.
+      * an `ID` inside a `fieldType` is the field's type, which is not indexed.
 
     `enterEveryRule` (a no-op here) subscribes the listener to every rule, so
-    `current_rule()` can see the inner `field` / `fieldType` scopes — without it,
-    the innermost *subscribed* rule would only ever be the message/enum we act on.
+    `current_rule()` can see the inner `field` and `fieldType` scopes. Without it,
+    the innermost subscribed rule would always be the message or enum definition.
     """
 
     def __init__(self) -> None:
@@ -89,7 +90,7 @@ class SchemaIndexer(SchemaEventListener):
         self._cur: TypeDef | None = None
 
     # Subscribe to all rules so current_rule() reflects the true innermost rule
-    # (field / fieldType), not just the message/enum scopes we open below.
+    # (field or fieldType), not just the message and enum scopes we open below.
     def enterEveryRule(self, rule_index: int) -> None: ...
 
     # A definition starts: open a fresh TypeDef…
@@ -123,7 +124,7 @@ class SchemaIndexer(SchemaEventListener):
                 cur.name = text  # the definition's own name (the ID before `{`)
             else:
                 cur.members.append(text)  # an enum constant (bare ID in the body)
-        # rule == "fieldType": the field's declared type — not indexed.
+        # rule == "fieldType": the field's declared type, which is not indexed.
 
 
 # --- the three ways to run it -------------------------------------------------
@@ -138,10 +139,10 @@ def index_parallel(text: str) -> list[TypeDef]:
     """Chunk on grammar structure, then parse the definitions across cores.
 
     `chunk_by_rule` parses the whole file once (in C++) to find each top-level
-    `messageDef` / `enumDef` span; `walk_parallel` re-parses each span as a
-    `definition` on a worker pool, yielding one listener per definition. Worth it
-    only when the per-definition Python work is heavy — here it is tiny, so
-    `index_whole` usually wins.
+    `messageDef` or `enumDef` span; `walk_parallel` re-parses each span as a
+    `definition` on a worker pool, yielding one listener per definition. This is
+    worth it only when the per-definition Python work is heavy. Here it is tiny, so
+    `index_whole` is usually faster.
     """
     chunks = SchemaIndexer.chunk_by_rule(text, {"messageDef", "enumDef"})
     out: list[TypeDef] = []
@@ -155,7 +156,7 @@ def index_streaming(path: str | Path) -> list[TypeDef]:
 
     `stream_by_rule` opens the file in C++ and yields one definition at a time
     without holding the whole source or token stream. The candidate rules
-    (`messageDef` / `enumDef`) have disjoint leading tokens (`message` vs `enum`),
+    (`messageDef` and `enumDef`) start with different tokens (`message` and `enum`),
     so the next token selects which to parse. Use this for files too big to load.
     """
     chunks = SchemaIndexer.stream_by_rule(path, {"messageDef", "enumDef"})
@@ -165,7 +166,7 @@ def index_streaming(path: str | Path) -> list[TypeDef]:
     return out
 
 
-# --- reporting + a throwaway data generator -----------------------------------
+# --- reporting and a throwaway data generator ---------------------------------
 
 
 def print_index(types: list[TypeDef]) -> None:
@@ -207,7 +208,7 @@ def benchmark(n: int) -> None:
     assert len(whole) == len(parallel) == len(streamed) == n  # all three agree
     print(
         "\nFor light per-definition work like this, the single walk usually wins; "
-        "parallel/streaming pay off on huge files or heavy per-definition work."
+        "parallel and streaming pay off on huge files or heavy per-definition work."
     )
 
 
