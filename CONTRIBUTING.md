@@ -124,14 +124,18 @@ file via `importlib.resources`. The conda recipe is the exception: it tracks the
 *published* release it packages, not the dev version, so it pins its own value
 (bumped per release).
 
-**Policy: bump the patch on every commit that changes runtime behavior or
-user-facing docs.** Edit `VERSION` in the same commit that touches the runtime
-(`src/`, `cpp/`, `vendor/antlr4-cpp/`) or the external docs (`README.md`,
-`docs/`). Build-only, test-only, or dev-tooling changes (pixi/CMake config,
-`scripts/`, `CONTRIBUTING.md`, CI) don't need a bump. When you bump, add a matching
-entry to [CHANGELOG.md](CHANGELOG.md). Editing the file is enough to change the
-version: `__version__` reflects it immediately. Run `pixi install` to update the
-installed package metadata as well.
+**Policy: bump the version once per release cycle, and record every user-visible
+change in the changelog.** After a release, a "Start X.Y.Z development" commit
+sets `VERSION` to the next version and opens an `## [X.Y.Z] - Unreleased` section
+in [CHANGELOG.md](CHANGELOG.md) (see [RELEASING.md](RELEASING.md)). After that,
+every commit that changes runtime behavior (`src/`, `cpp/`, `vendor/antlr4-cpp/`)
+or user-facing docs (`README.md`, `docs/`, docstrings, CLI help) adds an entry to
+that section, without changing `VERSION`. Build-only, test-only, or dev-tooling
+changes (pixi or CMake config, `scripts/`, `CONTRIBUTING.md`, CI) don't need an
+entry.
+
+Editing `VERSION` is enough to change the version: `__version__` reflects it
+immediately. Run `pixi install` to update the installed package metadata as well.
 
 ## Vendored runtime
 
