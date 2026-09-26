@@ -235,7 +235,7 @@ python = ">=3.12"
 zensical = ">=0.0.65,<0.2.0"
 mkdocstrings-python = ">=2.0"
 mkdocstrings-python-xref = ">=2.1.1"
-ruff = "*"
+ruff = ">=0.16.9"
 
 [tool.pixi.feature.docs.pypi-dependencies]
 # Versioned-docs deploys to gh-pages (the docs-deploy / docs-set-default tasks).
