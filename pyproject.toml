@@ -208,10 +208,10 @@ python-build = "*"
 # downstream consumer needs an `antlrope[test]` extra (the suite isn't
 # shipped in the wheel), so it lives in the dev environment, not as a published
 # optional dependency.
-pyright = ">=1.1.409"
+pyright = ">=1.1.414"
 pytest = ">=7"
 pytest-cov = ">=4"
-ruff = ">=0.15.16"
+ruff = ">=0.16.9"
 # Formats cpp/ (the `format-cpp` task; config in .clang-format). Pinned to a
 # major version: output differs across majors, so an open range would let two
 # environments format the same code differently.
