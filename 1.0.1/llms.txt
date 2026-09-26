@@ -1,0 +1,72 @@
+# antlrope
+
+> Fast, C++-accelerated ANTLR runtime for Python. Parse text with an ANTLR grammar at C++ speed (typically 10–20× the official pure-Python runtime) while writing only plain-Python listener callbacks — no C or C++ to write or compile.
+
+**Antlrope** drives the official ANTLR4 **C++** runtime's ATN interpreter directly from the serialized ATN that the stock `-Dlanguage=Python3` ANTLR tool already emits, so there is no per-grammar C++ codegen and nothing to compile. After parsing in C++, a single bulk, filtered event stream crosses into Python (one transfer, not one foreign-function call per parse-tree node) and drives named callbacks.
+
+When to use it: throughput on large or many-record inputs. When NOT to use it (use the official `antlr4-python3-runtime` instead): the grammar relies on **semantic predicates** (`{...}?`) or **embedded actions** (`{...}` target-language code) — the interpreted ATN cannot execute those; or you need a **retained, randomly-accessible parse tree** rather than a single streaming pass.
+
+## Install
+
+- `pip install antlrope` (or `conda install -c conda-forge antlrope`) — pre-built wheels / conda packages, CPython 3.12 and newer, Linux/macOS/Windows. Pulls in `antlr4-python3-runtime` automatically.
+- `pip install antlr4-tools` — the ANTLR tool (Java) used to generate parsers from a `.g4` grammar. Needed only at build time.
+
+## Workflow
+
+1. Generate a parser with the stock ANTLR tool (ordinary ANTLR, nothing special):
+   `antlr4 -Dlanguage=Python3 JSON.g4 -o generated`  → `generated/JSONLexer.py`, `generated/JSONParser.py`
+2. Generate a facade from the parser module (an importable dotted path) + a grammar-name prefix:
+   `antlrope gen generated.JSONParser JSON -o json_listener.py`
+   → a `JsonEventListener` base class (named `<Grammar>.capitalize() + "EventListener"`) with an `enter<Rule>`/`exit<Rule>` pair per grammar rule, `visitTerminal`/`visitError`, token-type constants, and a `walk(text)` method. The facade imports the lexer/parser and bakes them in, so `walk`/`walk_parallel` need no class arguments. The lexer module is derived from the parser's (`<Grammar>Parser` → `<Grammar>Lexer`); pass `--lexer` to override. You subclass it; you do not edit it.
+3. Subclass the facade, override only the callbacks you need, and call `walk`:
+
+```python
+from json_listener import JsonEventListener        # generated in step 2
+
+class StringCollector(JsonEventListener):
+    def __init__(self):
+        self.strings = []
+    def visitTerminal(self, token_type: int, text: str) -> None:
+        if token_type == self.STRING:                # STRING is a generated constant on the class
+            self.strings.append(text)
+
+c = StringCollector()
+c.walk('{"name": "ada", "tags": ["x", "y"]}')   # optional: start_rule="value"
+print(c.strings)
+```
+
+Key model facts for writing listeners:
+- Rule callbacks take **no** node/context object and no arguments. Reconstruct state from the *order* of enter/exit/terminal events — usually a small stack (push on `enter<Rule>`, pop on `exit<Rule>`).
+- `visitTerminal(self, token_type, text)` gives the token's type (compare against the class's token-type constants, e.g. `self.STRING`) and its source text (already sliced for you).
+- Override only what you need: callbacks you do not define are filtered out in C++ and never cross into Python (faster).
+- Token-type constants for anonymous string literals use ANTLR's positional names (`T__0`, `T__1`, …, matching the generated lexer), not the token-type value.
+- Source position: inside any callback, `self.line_col()` returns the current event's `(line, column)` (or `None`), `self.span()` its raw `(start, stop)` char offsets, and `self.sourcename()` the source name (e.g. filename) if one was set. After `walk`, `self.syntax_errors` is a list of `ParseError` (ANTLR's console error listener is suppressed; it is reset on every `walk`).
+
+## Public API (`from antlrope import ...`)
+
+- `FacadeListener` — base of every generated `<Grammar>EventListener`. Callbacks `enter<Rule>()` / `exit<Rule>()` / `visitTerminal(token_type, text)` / `visitError(token_type, text)`; helpers `line_col()`, `span()`, `sourcename()`; attribute `syntax_errors`. Methods `walk(text, *, start_rule=None, filtered=True)` (on the generated subclass) and classmethod `walk_parallel(chunks, *, start_rule=None, max_workers=None, filtered=True)` — both use the baked-in lexer/parser; `walk_parallel` parses independent chunks across CPU cores; lazy iterator, results in input order, at most `max_workers` parses in flight (default `os.cpu_count()`).
+- Chunking — `classmethod`s on the generated `<Grammar>EventListener` (call as `MyListener.split_on_token(...)`), all yielding positioned `Chunk`s for `walk_parallel`. Token/rule ones use the baked-in lexer/parser and the class's token-type constants; no lexer/parser argument:
+  - `split_on_token(text, token_types, *, where="before"|"after", channel=0, sourcename="")` and `split_between_tokens(text, pairs, *, nested=False, ...)` — token-aware (a delimiter inside a string/comment never splits).
+  - `split_on_pattern(text, pattern, *, where=..., flags=0, sourcename="")` and `chunk_by_pattern(text, pattern, ...)` — regex; faster but not token-aware.
+  - `chunk_by_rule(text, rule, *, start_rule=None, outermost=True, ...)` — split on grammar structure (parses in C++).
+  - `stream_on_token(path, token_types, *, where=..., encoding="utf-8", sourcename="", ...)` and `stream_on_pattern(source, pattern, *, where=..., window_chars=65536, window_lines=None, encoding="utf-8", sourcename="")` — streaming, bounded-memory (read a file/stream incrementally).
+  - `lex(text, *, keep=None)` — the parser-free token pass the splitters build on; yields `LexToken(type, channel, start, stop)`.
+- `Chunk(text, offset=0, line=1, column=0, sourcename="")` — a source piece plus its position and optional source name; a bare `str` may be passed to `walk_parallel` instead (positioned contiguously).
+- `SourceMap(text)` — `.line_col(offset)` / `.offset(line, column)` between char offsets and `(line, column)`.
+- `ParseError` — a parse diagnostic; an `Exception` subclass (so it can be raised): `line`, `column`, `start`, `stop`, `message`.
+- CLI (`antlrope` is a command group): `antlrope gen <parser-module> <name> [-o <file>]` generates a facade (writing an origin header — version, command, rundir, input SHA256s — when `-o` is used); `antlrope regen <file>` regenerates it from that header; `antlrope up-to-date <file>` exits non-zero if its inputs changed; `antlrope check <parser-module>` exits non-zero if the grammar uses semantic predicates or embedded actions (which antlrope cannot run); `antlrope rules <parser-module>` / `antlrope tokens <parser-module>` list the rule names and token-type constants (`--json` for tooling).
+
+Character offsets throughout are 0-based **codepoint** indices; `line` is 1-based, `column` 0-based (matching ANTLR's `line:column`).
+
+## Documentation
+
+- [Getting started](https://zuzukin.github.io/antlrope/getting-started/): full generate → write a listener → run walkthrough.
+- [Installation](https://zuzukin.github.io/antlrope/installation/): pip, the ANTLR tool, supported Pythons/platforms.
+- [Chunking](https://zuzukin.github.io/antlrope/chunking/): split many-record or large input for parallel/streaming parsing.
+- [Parallel parsing](https://zuzukin.github.io/antlrope/parallel-parsing/): `walk_parallel` across cores.
+- [Migrating from antlr4-python3-runtime](https://zuzukin.github.io/antlrope/migrating/): map a `ParseTreeListener` onto the facade.
+- [API reference](https://zuzukin.github.io/antlrope/reference/api/): every symbol, generated from docstrings.
+- [Command line](https://zuzukin.github.io/antlrope/reference/cli/): the `antlrope` generator command.
+- [How it works](https://zuzukin.github.io/antlrope/concepts/): the bulk filtered event stream and native masking.
+- [Performance & limitations](https://zuzukin.github.io/antlrope/performance/): the speed ceiling and the predicate/action boundary.
+- [Source](https://github.com/zuzukin/antlrope) · [PyPI](https://pypi.org/project/antlrope/)

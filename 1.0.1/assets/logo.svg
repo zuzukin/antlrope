@@ -1,0 +1,36 @@
+<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="antlrope logo">
+  <title>antlrope</title>
+  <desc>The tan antlrope antelope mark beside the wordmark, with "ope" — Ordered Parse Events — accented.</desc>
+  <defs>
+    <linearGradient id="faceTL" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d2a96f"/>
+      <stop offset="1" stop-color="#9c6a33"/>
+    </linearGradient>
+    <clipPath id="hlTL"><path d="M125 118 C 112 86, 95 52, 78 18 C 83 50, 97 86, 107 118 Z"/></clipPath>
+    <clipPath id="hrTL"><path d="M131 118 C 144 86, 161 52, 178 18 C 173 50, 159 86, 149 118 Z"/></clipPath>
+  </defs>
+  <g transform="translate(8,16) scale(0.80)">
+    <path fill="#6e4420" d="M125 118 C 112 86, 95 52, 78 18 C 83 50, 97 86, 107 118 Z"/>
+    <path fill="#6e4420" d="M131 118 C 144 86, 161 52, 178 18 C 173 50, 159 86, 149 118 Z"/>
+    <g stroke="#46280f" stroke-width="3" stroke-linecap="round">
+      <g clip-path="url(#hlTL)">
+        <line x1="100.8" y1="103.2" x2="117.6" y2="96.8"/><line x1="92.4" y1="81.2" x2="109.2" y2="74.8"/>
+        <line x1="84" y1="59.2" x2="100.8" y2="52.8"/><line x1="76.4" y1="39.2" x2="93.2" y2="32.8"/>
+      </g>
+      <g clip-path="url(#hrTL)">
+        <line x1="155.2" y1="103.2" x2="138.4" y2="96.8"/><line x1="163.6" y1="81.2" x2="146.8" y2="74.8"/>
+        <line x1="172" y1="59.2" x2="155.2" y2="52.8"/><line x1="179.6" y1="39.2" x2="162.8" y2="32.8"/>
+      </g>
+    </g>
+    <path fill="#5c3a1c" d="M97 120 C 74 110, 50 105, 40 119 C 53 134, 80 136, 99 127 Z"/>
+    <path fill="#5c3a1c" d="M159 120 C 182 110, 206 105, 216 119 C 203 134, 176 136, 157 127 Z"/>
+    <path fill="url(#faceTL)" d="M95 116 C 89 154, 99 190, 118 214 C 124 221, 132 221, 138 214 C 157 190, 167 154, 161 116 C 154 101, 102 101, 95 116 Z"/>
+    <ellipse cx="113" cy="154" rx="7.5" ry="10" fill="#2a1808"/>
+    <ellipse cx="143" cy="154" rx="7.5" ry="10" fill="#2a1808"/>
+    <circle cx="115.4" cy="150.5" r="2.2" fill="#fff6e8"/>
+    <circle cx="145.4" cy="150.5" r="2.2" fill="#fff6e8"/>
+  </g>
+  <text x="244" y="158" font-family="'Helvetica Neue',Helvetica,Arial,sans-serif" font-size="118" font-weight="800" letter-spacing="-3">
+    <tspan fill="#7a4a22">antlr</tspan><tspan fill="#c98a3f">ope</tspan>
+  </text>
+</svg>
