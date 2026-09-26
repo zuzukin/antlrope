@@ -5,30 +5,31 @@ Two complete, runnable programs live in the
 repository. Each pairs a small ANTLR grammar with a generated facade and a Python
 consumer, so you can read the whole thing end to end:
 
-- **[JSON: reconstruct a value](json.md)** — the basics. Subclass the generated
-  facade, override a handful of callbacks, and rebuild a parsed JSON document into
+- **[JSON: reconstruct a value](json.md)**: the basics. Subclass the generated
+  facade, override a handful of callbacks, and rebuild a parsed JSON document as
   native Python objects with a small value stack. Start here.
-- **[Schema: parallel & streaming indexing](schema.md)** — scale to large input. A
-  tiny interface-definition language whose file is a sequence of independent
-  `message` / `enum` definitions, indexed three ways: one whole-file walk, chunk +
-  parse across cores, and bounded-memory streaming.
+- **[Schema: parallel & streaming indexing](schema.md)**: scaling to large input. A
+  small interface-definition language, whose files are sequences of independent
+  `message` and `enum` definitions, is indexed in three ways: a single whole-file
+  walk, chunking and parsing across cores, and streaming with bounded memory.
 
 ## What you need
 
-The examples are **part of the repository, not the installed package** — installing
-**Antlrope** gives you the runtime only, not the example grammars, their generated
-parsers, or the sample data. To run one you need just two things:
+The examples are part of the repository, not the installed package. Installing
+**Antlrope** gives you only the runtime, not the example grammars, their generated
+parsers, or the sample data. To run an example you need just two things:
 
 - **Antlrope installed** in your environment (`pip install antlrope` or
   `conda install -c conda-forge antlrope`). The consumers depend only on Antlrope and
-  the Python standard library — no other packages, and no pixi.
+  the Python standard library, with no other packages and no pixi.
 - **A copy of the `examples/` files** (see below). Each parser and facade is checked
-  in, so the examples run as-is. A JDK and the ANTLR tool are needed only if you want
-  to *regenerate* a parser after editing a grammar.
+  in, so the examples run as they are. A JDK and the ANTLR tool are needed only if
+  you want to regenerate a parser after editing a grammar.
 
-Use example files from the same version as your installed Antlrope. The generated
-facades carry an origin version; if it drifts the code still runs, but
-`antlrope up-to-date <facade>` will flag the mismatch.
+Use example files from the same version as your installed Antlrope. Each generated
+facade records the version that generated it. If that differs from your installed
+version, the code still runs, but `antlrope up-to-date <facade>` reports the
+mismatch.
 
 ## Getting the example files
 
@@ -39,8 +40,8 @@ git clone --depth 1 https://github.com/zuzukin/antlrope
 cd antlrope
 ```
 
-Or, without git, pull down just the `examples/` directory (macOS / Linux; on GNU tar
-add `--wildcards` before the pattern):
+Or, without git, download just the `examples/` directory (macOS and Linux; with GNU
+tar, add `--wildcards` before the pattern):
 
 ```sh
 curl -L https://github.com/zuzukin/antlrope/archive/refs/heads/dev.tar.gz \
@@ -49,8 +50,9 @@ curl -L https://github.com/zuzukin/antlrope/archive/refs/heads/dev.tar.gz \
 
 ## Running them
 
-Run a consumer from **inside its example directory** — the scripts import their facade
-and generated parser by directory-relative name, so the working directory matters:
+Run each consumer from inside its example directory. The scripts import their facade
+and generated parser by a name relative to that directory, so the working directory
+matters:
 
 ```sh
 cd examples/json    && python to_python.py '{"a": [1, true], "b": "hi"}'
@@ -58,7 +60,7 @@ cd examples/schema  && python index.py                      # the bundled sample
 cd examples/schema  && python index.py --benchmark 50000    # time the three modes
 ```
 
-That is the whole story in an installed environment: `python`, the example files, and
+In an installed environment, that is all you need: `python`, the example files, and
 Antlrope on the path.
 
 ### From a source-tree clone (pixi)
@@ -71,8 +73,8 @@ pixi run example          # JSON: reconstruct a value from argv
 pixi run example-schema   # Schema: index the bundled sample.schema
 ```
 
-To regenerate a parser or facade after editing a grammar (needs the `gen`
-environment, which provides the JDK + ANTLR tool):
+To regenerate a parser or facade after editing a grammar (this needs the `gen`
+environment, which provides the JDK and the ANTLR tool):
 
 ```sh
 pixi run gen-schema           # Schema.g4      -> generated/Schema{Lexer,Parser}.py

@@ -3,8 +3,8 @@
 !!! note ""
 
     This section contains the public API of the **antlrope** package, generated from docstrings.
-    [For task-oriented guidance see the [User Guide](../getting-started.md); the
-    `antlrope` generator command is documented under [Command line](cli.md).
+    For task-oriented guidance, see the [User Guide](../getting-started.md). The
+    `antlrope` command group is documented under [Command line](cli.md).
 
 ::: antlrope
     options:

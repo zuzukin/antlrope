@@ -1,12 +1,12 @@
 # Schema: parallel & streaming indexing
 
-This example indexes a **schema file** — a flat sequence of independent type
-definitions, the shape of a protobuf / Thrift / Cap'n Proto IDL — and shows how to
-scale the same listener from one document to a huge file. The full program is
+This example indexes a **schema file**: a flat sequence of independent type
+definitions, shaped like a protobuf, Thrift, or Cap'n Proto IDL. It also shows how
+to scale the same listener from one document to a very large file. The full program is
 [`examples/schema/index.py`](https://github.com/zuzukin/antlrope/blob/dev/examples/schema/index.py).
 
-It's the natural counterpart to the [JSON example](json.md): there, one document
-drives one walk; here, *many independent records* drive a chunk-and-parse pipeline.
+It complements the [JSON example](json.md). There, one document drives one walk;
+here, many independent records feed a pipeline that chunks and then parses them.
 
 ## The grammar
 
@@ -26,12 +26,13 @@ enumDef     : ENUM ID LBRACE (ID (COMMA ID)*)? RBRACE ;   // enum Color { RED, G
 
 Two properties make this a good fit for structural chunking:
 
-- Each definition is **self-contained** — it parses on its own, independent of the
+- Each definition is **self-contained**: it parses on its own, independent of the
   others.
-- A definition may **span many lines**, so a newline- or regex-split would cut it in
-  the wrong place. But it is exactly one `messageDef` or one `enumDef`, which
+- A definition may **span many lines**, so splitting on newlines or a regular
+  expression would cut it in the wrong place. However, each definition is exactly
+  one `messageDef` or one `enumDef`, and
   [`chunk_by_rule`](../chunking.md#rule-based-split-on-grammar-structure) and
-  `stream_by_rule` cut on precisely.
+  `stream_by_rule` split on exactly those rules.
 
 The keywords and punctuation get named lexer rules (`MESSAGE`, `LBRACE`, …), so the
 [facade] exposes readable constants (`self.MESSAGE`, `self.ID`) instead of positional
@@ -40,10 +41,12 @@ The keywords and punctuation get named lexer rules (`MESSAGE`, `LBRACE`, …), s
 ## The listener
 
 `SchemaIndexer` collects one `TypeDef` (kind, name, member names) per definition.
-As in the JSON example there are no node objects — state is reconstructed from event
-order — but here the scope helpers do the work. A definition is bracketed by
-`enter`/`exit{Message,Enum}Def`; inside it, `current_rule()` says which kind of `ID`
-we're looking at, so there's no `{`-seen flag and no field-name lookahead:
+As in the JSON example, there are no node objects, and state is reconstructed from
+the order of events. Here, though, the scope helpers do most of the work. Each
+definition starts with `enterMessageDef` or `enterEnumDef` and ends with the matching
+exit callback. Inside it, `current_rule()` tells you which kind of `ID` you are
+looking at, so you need neither a flag for having seen `{` nor lookahead for field
+names:
 
 ```python
 class SchemaIndexer(SchemaEventListener):
@@ -73,13 +76,13 @@ class SchemaIndexer(SchemaEventListener):
         # rule == "fieldType": the field's declared type — not indexed.
 ```
 
-`current_rule()` (with `depth()` / `rule_stack()`) reflects exactly the rules you
-subscribe to; overriding the no-op `enterEveryRule` subscribes to all of them, so the
-inner `field` / `fieldType` scopes become visible.
+`current_rule()`, like `depth()` and `rule_stack()`, reflects only the rules you
+subscribe to. Overriding the no-op `enterEveryRule` subscribes to all of them, so the
+inner `field` and `fieldType` scopes become visible.
 
 The same listener works whether it walks the whole file (accumulating every
-definition into `self.types`) or a single definition (one entry) — which is what
-lets all three modes below share it.
+definition into `self.types`) or a single definition (one entry). This is what lets
+all three modes below share it.
 
 ## Three ways to run it
 
@@ -90,9 +93,9 @@ def index_whole(text: str) -> list[TypeDef]:
     return SchemaIndexer().walk(text, start_rule="schema").types
 ```
 
-One C++ parse of the entire file. For input you can hold in memory with light
-per-record work, this is the simplest and usually the fastest — there is no chunking
-overhead, and one parse beats many.
+This runs one C++ parse of the entire file. When the input fits in memory and the
+per-record work is light, this is the simplest option and usually the fastest: there
+is no chunking overhead, and one parse is cheaper than many.
 
 ### 2. Chunk by rule, parse across cores
 
@@ -105,8 +108,8 @@ def index_parallel(text: str) -> list[TypeDef]:
     return out
 ```
 
-[`chunk_by_rule`](../chunking.md) parses the file once (in C++) to find each
-top-level `messageDef` / `enumDef` span; passing a **set** of rules indexes both
+[`chunk_by_rule`](../chunking.md) parses the file once in C++ to find the span of
+each top-level `messageDef` and `enumDef`; passing a **set** of rules indexes both
 kinds. [`walk_parallel`](../parallel-parsing.md) then re-parses each span as a
 `definition` on a worker pool, yielding one listener per definition. The native
 parses release the [GIL] and overlap across cores.
@@ -124,10 +127,10 @@ def index_streaming(path: str | Path) -> list[TypeDef]:
 
 `stream_by_rule` opens the file in C++ and yields **one definition at a time**
 without ever holding the whole source or token stream in memory. The candidate rules
-have disjoint leading tokens (`message` vs `enum`), so the next token selects which
-to parse. Paired with `walk_parallel` (which pulls chunks lazily), the whole
-pipeline — read, chunk, parse — stays bounded in the file size. This is how you index
-a schema far larger than RAM.
+start with different tokens (`message` and `enum`), so the next token selects which
+rule to parse. Combined with `walk_parallel`, which pulls chunks lazily, the whole
+pipeline of reading, chunking, and parsing uses bounded memory regardless of file
+size. This lets you index a schema much larger than available RAM.
 
 ## Which one to use
 
@@ -143,21 +146,22 @@ $ cd examples/schema && python index.py
 ```
 
 `python index.py --benchmark 50000` generates 50k definitions and times all three.
-You'll find the **single whole-file walk wins** here — and that's the honest lesson:
+Here, the single whole-file walk is the fastest, and that is the useful lesson:
 
-- **Reach for chunking + `walk_parallel` when the per-record *parse* is the expensive
-  part.** The speedup comes from overlapping the native parses (GIL released), so it
-  scales with how parse-heavy the grammar is. This schema is trivial to parse, so the
-  chunking overhead dominates and the single walk wins. For a parse-heavy grammar the
-  result flips — see the [SystemRDL benchmark](../benchmarks/systemrdl.md), where the
-  same pattern is ~20× faster than the pure-Python runtime.
-- **Reach for streaming when the file doesn't fit in memory.** `stream_by_rule`'s
-  value is *bounded memory*, independent of whether it's faster — it lets you index a
-  10 GB schema on a laptop.
+- **Use chunking and `walk_parallel` when parsing each record is the expensive
+  part.** The speedup comes from running the native parses in parallel with the GIL
+  released, so it grows with the cost of parsing the grammar. This schema is trivial
+  to parse, so the chunking overhead dominates and the single walk is faster. For a
+  grammar that is expensive to parse, the result is reversed. (For scale, the
+  [SystemRDL benchmark](../benchmarks/systemrdl.md) shows a ~20× speedup over the
+  pure-Python runtime for a whole-file parse.)
+- **Use streaming when the file does not fit in memory.** The benefit of
+  `stream_by_rule` is bounded memory, not speed: it lets you index a 10 GB schema on
+  a laptop.
 - **Otherwise, walk the whole file.** Don't chunk for its own sake.
 
-See [Performance & limitations](../performance.md) for the measured trade-offs and
-the rule of thumb on when each pays off.
+See [Performance & limitations](../performance.md#chunking-lexer-vs-regex) for the
+measured costs and trade-offs of the chunking methods.
 
 [facade]: ../glossary.md#facade
 [GIL]: ../glossary.md#gil

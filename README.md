@@ -14,29 +14,30 @@
   <a href="https://zuzukin.github.io/antlrope/"><img alt="docs" src="https://img.shields.io/badge/docs-latest-blue"></a>
 </p>
 
-A fast, C++-accelerated [ANTLR](https://www.antlr.org/) runtime for Python for target-agnostic grammars
+A fast, C++-accelerated [ANTLR](https://www.antlr.org/) runtime for Python, for target-agnostic grammars.
 
-*antl**rope*** = ANTLR + **O**rdered **P**arse **E**vents — your parse delivered as one ordered stream of events, not a per-node tree walk.
+*antl**rope*** = ANTLR + **O**rdered **P**arse **E**vents: your parse is delivered as one ordered stream of events instead of a per-node tree walk.
 
 > **10–20× faster** than the official pure-Python `antlr4-python3-runtime` on
-> workloads that touch most nodes — and more when your listener subscribes to
-> only a subset of the grammar.
+> workloads that touch most nodes, and faster still when your listener subscribes
+> to only part of the grammar.
 
 [![Parsing and reading a 2.6 MB SystemRDL file: antlrope is ~21x faster than the pure-Python runtime and ~8x faster than the speedy-antlr accelerator, at lower peak memory](docs/benchmarks/systemrdl.svg)](docs/benchmarks/systemrdl.md)
 
-<sub>Parsing + reading a real 2.6 MB SystemRDL file — see the [full benchmark](docs/benchmarks/systemrdl.md) (vs the pure-Python runtime and the `speedy-antlr` accelerator).</sub>
+<sub>Parsing and reading a real 2.6 MB SystemRDL file, compared with the pure-Python runtime and the `speedy-antlr` accelerator. See the [full benchmark](docs/benchmarks/systemrdl.md).</sub>
 
 Generate your parser with the ordinary ANTLR tool targeting Python, install
 this package, generate a small *facade* class, and write a pure-Python event listener.
-Parsing itself runs inside the official ANTLR4 **C++** runtime, driven directly
-from the serialized ATN (Augmented Transition Network) the stock Python target already emits.
-Instead of a per-node parse-tree walk (one foreign-function crossing per tree node), the C++
-side collects a **single bulk, filtered event stream** and hands it to Python in
-one transfer — and it drops the rules/tokens your listener doesn't subscribe to
-*before* they ever reach Python.
+Parsing runs inside the official ANTLR4 C++ runtime, driven directly from the
+serialized ATN (Augmented Transition Network) that the stock Python target already
+emits. A conventional listener walks the parse tree node by node, crossing the
+foreign-function boundary once per node. Here, the C++ side instead collects a
+single, filtered stream of events and hands it to Python in one transfer. Rules
+and tokens your listener doesn't subscribe to are dropped in C++, before they
+reach Python.
 
-It complements, rather than replaces, the official `antlr4-python3-runtime`: same
-generated parser, a faster way to consume it.
+It complements, rather than replaces, the official `antlr4-python3-runtime`: you
+use the same generated parser and get a faster way to consume it.
 
 ## Install
 
@@ -52,8 +53,8 @@ Or from conda-forge (with conda, mamba, or pixi):
 conda install -c conda-forge antlrope
 ```
 
-Either way you get a pre-compiled binary — nothing to build — and the official
-`antlr4-python3-runtime` is pulled in automatically.
+Either way you get a pre-compiled binary, so there is nothing to build. The
+official `antlr4-python3-runtime` is installed automatically as a dependency.
 
 ## Quickstart
 
@@ -69,12 +70,12 @@ Either way you get a pre-compiled binary — nothing to build — and the offici
    antlrope gen generated.MyGrammarParser MyGrammar -o my_listener.py
    ```
 
-   This emits a `MyGrammarEventListener` base class with `enter<Rule>` /
-   `exit<Rule>` / `visitTerminal` / `visitError` stubs and token-type constants.
-   The facade also imports and bakes in your lexer/parser, so you never pass them
-   at parse time. The lexer module is derived from the parser's by ANTLR's
-   `<Grammar>Lexer` / `<Grammar>Parser` convention; pass `--lexer` if yours is
-   named differently.
+   This emits a `MyGrammarEventListener` base class with `enter<Rule>`,
+   `exit<Rule>`, `visitTerminal`, and `visitError` stubs and token-type constants.
+   The facade also imports your lexer and parser and stores references to them, so
+   you never pass them at parse time. The lexer module name is derived from the
+   parser module name using ANTLR's `<Grammar>Lexer` / `<Grammar>Parser` naming
+   convention. Pass `--lexer` if your lexer module is named differently.
 
 3. **Subclass it** and override only the callbacks you care about:
 
@@ -90,28 +91,33 @@ Either way you get a pre-compiled binary — nothing to build — and the offici
    Collector().walk(source_text)
    ```
 
-Only the callbacks you override drive native masks, so the C++ side skips every
-other rule/token — the fewer node kinds you subscribe to, the faster the walk.
+The callbacks you override determine which events the C++ side emits; it skips
+every other rule and token. The fewer node kinds you subscribe to, the faster the
+walk.
 
 ## How it works
 
-- The C++ extension deserializes the ATN from your generated lexer/parser and
-  drives `LexerInterpreter` / `ParserInterpreter` — no generated C++ parser.
-- A native iterative depth-first traversal over the finished parse tree appends
-  fixed `(kind, payload, start, stop)` int32 records to one buffer (`parse_events`).
+- The C++ extension deserializes the ATN from your generated lexer and parser and
+  runs it with ANTLR's `LexerInterpreter` and `ParserInterpreter`. No C++ parser is
+  generated.
+- After parsing, a native depth-first traversal of the parse tree appends
+  fixed-size `(kind, payload, start, stop)` int32 records to a single buffer
+  (`parse_events`).
 - `kind`: `0=ENTER_RULE, 1=EXIT_RULE, 2=TERMINAL, 3=ERROR`; `payload` is the rule
-  index or token type; `start`/`stop` are char indices into the source (`-1` for
-  rule events). Token text is recovered Python-side by slicing
-  `text[start:stop + 1]` — no string copies cross the boundary.
-- Rule/token masks built from your overrides filter the stream in C++.
+  index or token type; `start` and `stop` are character indices into the source
+  (the token's span, or a rule's full extent; `-1` for an item with no span, such
+  as an empty rule). Python recovers token text by slicing `text[start:stop + 1]`,
+  so no strings are copied across the boundary.
+- Masks built from your overridden callbacks filter rules and tokens out of the
+  stream in C++.
 
 ## Limitations
 
-This can only be used for target-language-agnostic grammars.
-This runtime executes the **interpreted ATN**; it cannot run target-language
-**semantic predicates or embedded grammar actions**. Grammars that depend on
-them will not parse correctly here. See `docs/` for the full discussion and the
-performance characteristics of the bulk event-stream approach.
+Antlrope only works with target-language-agnostic grammars. It interprets the
+ATN, so it cannot run target-language semantic predicates or embedded grammar
+actions, and grammars that depend on them will not parse correctly. See
+[Performance & limitations](docs/performance.md) for details and for the
+performance characteristics of the event-stream approach.
 
 ## Contributing
 
@@ -130,10 +136,10 @@ In the repo, see [`docs/`](docs/index.md): [getting started](docs/getting-starte
 [how it works](docs/concepts.md), and the
 [SystemRDL benchmark](docs/benchmarks/systemrdl.md).
 
-Using an **AI coding assistant** to write a listener (or port a
-`ParseTreeListener`)? Give it the LLM-oriented docs summary at
-[zuzukin.github.io/antlrope/llms.txt](https://zuzukin.github.io/antlrope/llms.txt)
-plus your grammar — and, when porting, your existing listener.
+Using an AI coding assistant to write a listener or port a `ParseTreeListener`?
+Give it the LLM-oriented summary of these docs at
+[zuzukin.github.io/antlrope/llms.txt](https://zuzukin.github.io/antlrope/llms.txt),
+your grammar, and, if you are porting, your existing listener.
 
 ## License
 

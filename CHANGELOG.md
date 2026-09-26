@@ -7,6 +7,16 @@ follows semantic versioning (see the version policy in
 
 ## [1.0.2] - Unreleased
 
+### Changed
+- Rewrote the prose of the README, the documentation site, and `llms.txt` in plainer,
+  more natural English. Technical content is unchanged.
+
+### Fixed
+- Documentation errors: the getting-started `antlrope gen` command used a slash
+  path instead of a dotted module path; the JSON example page called a class that
+  does not exist; the README described rule events as having no span; several
+  broken links and anchors.
+
 ## [1.0.1] - 2026-07-25
 
 ### Added

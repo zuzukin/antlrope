@@ -5,59 +5,65 @@ throughout these docs.
 
 ## ATN {#atn}
 
-**Augmented Transition Network** — the state machine ANTLR compiles a grammar into,
-with one sub-network per rule, that drives the parser's and lexer's decisions. ANTLR
-emits it as a compact **serialized ATN** (an integer array) inside the generated
+**Augmented Transition Network**: the state machine that ANTLR compiles a grammar
+into. It has one sub-network per rule and drives the lexer's and parser's decisions.
+ANTLR emits it as a compact serialized ATN (an integer array) inside the generated
 parser and lexer modules. **Antlrope** deserializes that array and runs it directly
-with the official C++ runtime — which is why there is no per-grammar C++ codegen.
+with the official C++ runtime, which is why no C++ code is generated per grammar.
 See [How it works](concepts.md).
 
 ## ATN interpreter {#atn-interpreter}
 
-ANTLR's `ParserInterpreter` / `LexerInterpreter` — the runtime components that
-*execute* the [ATN](#atn) directly to parse input, instead of running code generated
+ANTLR's `ParserInterpreter` and `LexerInterpreter`: the runtime components that
+execute the [ATN](#atn) directly to parse input, instead of running code generated
 for one specific grammar. Antlrope drives the C++ runtime's interpreters from the
 serialized ATN, so it works for any grammar with no code-generation step of its own.
 
 ## DFA {#dfa}
 
-**Deterministic Finite Automaton** — the lookahead automaton ANTLR builds and caches
-as it parses, to make each parsing decision fast. Its states are shared mutable data
-hanging off the [ATN](#atn); the vendored C++ runtime makes the DFA-edge reads
-lock-free so parses can run concurrently. See
+**Deterministic Finite Automaton**: the lookahead automaton that ANTLR builds and
+caches while parsing, to make each decision fast. Its states are shared, mutable
+data attached to the [ATN](#atn). The stock C++ runtime guards changes to every DFA
+with one lock on the ATN, so concurrent parses that share a grammar wait on each
+other. The vendored runtime gives each DFA its own write lock, which is what lets
+parses with a shared spec scale across threads. It also makes DFA-edge reads
+lock-free, which speeds up single-threaded parsing. See
+[How it works](concepts.md#the-vendored-runtime-and-its-patches) and
 [Parallel parsing](parallel-parsing.md).
 
 ## embedded action {#embedded-action}
 
-Target-language code written inline in a grammar between `{` and `}` — e.g.
-`{ count += 1; }` — that ANTLR copies into the generated parser to run during a
+Target-language code written inline in a grammar between `{` and `}`, such as
+`{ count += 1; }`. ANTLR copies it into the generated parser to run during a
 parse. Because Antlrope interprets the [ATN](#atn) rather than running
-grammar-specific generated code, it **cannot** execute embedded actions; grammars
+grammar-specific generated code, it cannot execute embedded actions, and grammars
 that depend on them won't parse correctly. See
 [Performance & limitations](performance.md).
 
 ## facade {#facade}
 
-The `<Grammar>EventListener` class `antlrope` generates from your parser. You
-subclass it and override only the callbacks you care about; it bakes in the
-lexer/parser and provides `walk` / `walk_parallel` and the chunkers. It mirrors the
+The `<Grammar>EventListener` class that `antlrope gen` generates from your parser.
+You subclass it and override only the callbacks you care about. It holds references
+to your lexer and parser, and it provides `walk`, `walk_parallel`, and the chunkers.
+It mirrors the
 stock ANTLR listener interface so consumer code looks familiar. See
 [Getting started](getting-started.md).
 
 ## FFI {#ffi}
 
-**Foreign Function Interface** — the boundary across which Python calls into native
-(C/C++) code and back. Every crossing has overhead, so a per-node parse-tree walk
-pays an FFI cost *per tree node*. Antlrope instead crosses once per parse, handing
+**Foreign Function Interface**: the boundary across which Python calls into native
+(C or C++) code and back. Every crossing has overhead, so a parse-tree walk that
+calls Python for each node pays that cost once per node. Antlrope instead crosses once per parse, handing
 Python a single bulk event buffer. See [How it works](concepts.md).
 
 ## GIL {#gil}
 
-**Global Interpreter Lock** — CPython's lock that lets only one thread run Python
-bytecode at a time. Antlrope's native parse releases the GIL, so the parses
-themselves overlap across threads; the per-event Python dispatch still holds it, so
-[`walk_parallel`](parallel-parsing.md)'s speedup scales with how parse-heavy the
-work is. On a **free-threaded** (no-GIL) CPython build the dispatch parallelizes too.
+**Global Interpreter Lock**: CPython's lock that lets only one thread run Python
+bytecode at a time. Antlrope releases the GIL during the native parse, so parses on
+different threads run at the same time. Dispatching events to your Python callbacks
+still holds the GIL, so the speedup from [`walk_parallel`](parallel-parsing.md)
+depends on how much of the work is parsing. On a free-threaded (no-GIL) CPython
+build, the dispatch also runs in parallel.
 
 ## manylinux {#manylinux}
 
@@ -70,14 +76,14 @@ compiler. See [Installation](installation.md).
 
 The tree of rule and token nodes a traditional parser builds to represent the
 structure of the input; ANTLR's listeners and visitors walk it node by node.
-Antlrope does **not** materialize a parse tree — it delivers the same information
-as a flat, ordered stream of events — so reach for the official runtime when you
-need a retained, randomly-accessible tree. See [How it works](concepts.md).
+Antlrope builds its parse tree in C++ and never creates a Python parse tree;
+instead, it delivers the same information as a flat, ordered stream of events. Use
+the official runtime when you need a tree you can keep and navigate freely. See [How it works](concepts.md).
 
 ## semantic predicate {#semantic-predicate}
 
-A grammar condition written in target-language code, `{ ... }?` — e.g.
-`{ version >= 3 }?` — that ANTLR evaluates during a parse to choose between
+A grammar condition written in target-language code as `{ ... }?`, such as
+`{ version >= 3 }?`, that ANTLR evaluates during a parse to choose between
 alternatives. Like [embedded actions](#embedded-action), Antlrope cannot evaluate
 them, so predicate-dependent grammars won't parse correctly. See
 [Performance & limitations](performance.md).

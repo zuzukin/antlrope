@@ -7,8 +7,9 @@ local development setup; for what the package does and how to use it, see the
 ## Development environment
 
 This project uses [pixi](https://pixi.sh). The toolchain (C++ compiler, CMake,
-Ninja, nanobind, scikit-build-core) comes from the pixi environment, so the
-editable `editable.rebuild` hook always finds a persistent CMake on `PATH`.
+Ninja, nanobind, scikit-build-core) comes from the pixi environment. CMake and Ninja
+must be on `PATH` because the editable install uses no build isolation and
+`pixi run build` invokes them; the pixi environment provides both.
 
 ```sh
 pixi install            # solve + build the editable extension
@@ -21,13 +22,15 @@ pixi run docs-build     # build the static docs site into site/
 
 ## Environments
 
-- **default** — Python build + test toolchain (no JDK); `pixi run test` lives here.
-- **gen** — adds `openjdk` + the ANTLR tool, isolated from the runtime envs.
-  Regenerate the example from the grammar with `pixi run gen-json` (re-runs the
-  ANTLR Python target on `examples/json/JSON.g4`) and `pixi run gen-facade`.
-- **docs** — [Zensical](https://zensical.org) static site generator, isolated
-  with no default feature so building the docs pulls neither the JDK nor the C++
-  toolchain. Configured by `zensical.toml`; output goes to `site/` (gitignored).
+- **default**: the Python build and test toolchain (no JDK); `pixi run test` runs
+  here.
+- **gen**: adds `openjdk` and the ANTLR tool, kept separate from the runtime
+  environments. Regenerate the example from the grammar with `pixi run gen-json`
+  (which reruns the ANTLR Python target on `examples/json/JSON.g4`) and
+  `pixi run gen-facade`.
+- **docs**: the [Zensical](https://zensical.org) static site generator. This
+  environment has no default feature, so building the docs installs neither the JDK
+  nor the C++ toolchain. Configured by `zensical.toml`; output goes to `site/` (gitignored).
 
 ## The native extension and its type stub
 
@@ -40,17 +43,18 @@ under `cpp/` or `vendor/antlr4-cpp/`, recompile explicitly:
 pixi run build      # incremental cmake build + install (scripts/build_native.py)
 ```
 
-Then `pixi run test` runs against the fresh build. Because import never invokes
-the build toolchain, the package imports fine from any interpreter — including an
-IDE that points at `.pixi/envs/default` without activating it (e.g. PyCharm using
-the env prefix as a plain interpreter); no `cmake` on `PATH` is required.
+Then `pixi run test` runs against the fresh build. Because importing the package
+never invokes the build toolchain, it imports from any interpreter and does not need
+`cmake` on `PATH`. This includes an IDE that uses `.pixi/envs/default` without
+activating it, such as PyCharm configured with the environment prefix as a plain
+interpreter.
 
 `_native` is a compiled module loaded through scikit-build-core's editable
 redirector, which IDEs and type checkers cannot follow. A checked-in stub,
 `src/antlrope/_native.pyi`, gives them the interface (and the `py.typed`
 marker advertises the package as typed). If you change the **public interface** of
-`cpp/binding.cpp` — add or rename a class, method, or function, or change a
-signature — rebuild, then regenerate the stub:
+`cpp/binding.cpp` (add or rename a class, method, or function, or change a
+signature), rebuild, then regenerate the stub:
 
 ```sh
 pixi run build
@@ -58,8 +62,8 @@ pixi run stubgen
 ```
 
 `pixi run stubgen` runs `scripts/stubgen.py`, which invokes nanobind's stubgen and
-then re-applies the edits nanobind cannot infer — the license header and the
-`parse_events` / `lex` return types — so the committed stub is produced directly.
+then re-applies the edits nanobind cannot infer (the license header and the
+`parse_events` and `lex` return types), so the committed stub is produced directly.
 To change those edits, edit `scripts/stubgen.py`, not the `.pyi`.
 
 ## Naming the product
@@ -79,7 +83,7 @@ cross-references written as `[title][path.to.symbol]` (e.g.
 
 **Do not wrap the cross-reference title in backticks.** Write `[title][ref]`, not
 `` [`title`][ref] ``. Backticks render the title as inline code, which visually
-hides that the text is a clickable link — the reference still resolves, but
+hides that the text is a clickable link. The reference still resolves, but
 readers can't tell it's a link. Plain `[title][ref]` renders as a normal styled
 link. Backticks are still correct for inline code that is *not* a cross-reference
 (a parameter or type name with no `][ref]` after it).
@@ -88,19 +92,20 @@ link. Backticks are still correct for inline code that is *not* a cross-referenc
 
 `docs/llms.txt` is a hand-written, LLM-oriented summary of the library (install, the
 generate → facade → `walk` workflow, the listener model, the public API, and doc
-links), published verbatim at the doc-site root (`/llms.txt`) for coding agents — see
-[llmstxt.org](https://llmstxt.org/). It is **not generated**, so keep it in sync when
+links). It is published verbatim at the doc-site root (`/llms.txt`) for coding
+agents; see [llmstxt.org](https://llmstxt.org/). It is **not generated**, so keep it in sync when
 any of these change: the public API (`__all__`), the workflow or listener model,
 install instructions, the supported Python/platform versions, or the doc page set and
-`site_url` (its doc links are absolute). It is excluded from the rendered docs — no
-nav, search, or sitemap — so `pixi run docs-build` will **not** flag it as stale.
+`site_url` (its doc links are absolute). It is excluded from the rendered docs (no
+nav, search, or sitemap entry), so `pixi run docs-build` will **not** flag it as
+stale.
 
 ## CLI reference
 
 The command reference in `docs/reference/cli.md` (the region between the
 `gen-cli-help` markers) is **generated from the live `antlrope --help` output** by
-`scripts/gen_cli_docs.py`. After any change to the CLI (`antlrope.cli` — a command's
-arguments or help text, or adding/renaming a subcommand), regenerate it:
+`scripts/gen_cli_docs.py`. After any change to the CLI in `antlrope.cli` (a
+command's arguments or help text, or adding or renaming a subcommand), regenerate it:
 
 ```sh
 pixi run gen-cli-docs
@@ -124,9 +129,9 @@ user-facing docs.** Edit `VERSION` in the same commit that touches the runtime
 (`src/`, `cpp/`, `vendor/antlr4-cpp/`) or the external docs (`README.md`,
 `docs/`). Build-only, test-only, or dev-tooling changes (pixi/CMake config,
 `scripts/`, `CONTRIBUTING.md`, CI) don't need a bump. When you bump, add a matching
-entry to [CHANGELOG.md](CHANGELOG.md). Bumping the file is enough for the version
-itself — `__version__` reflects it immediately; run `pixi install` to refresh the
-installed package metadata too.
+entry to [CHANGELOG.md](CHANGELOG.md). Editing the file is enough to change the
+version: `__version__` reflects it immediately. Run `pixi install` to update the
+installed package metadata as well.
 
 ## Vendored runtime
 
@@ -135,14 +140,14 @@ The vendored ANTLR C++ runtime is built from `vendor/antlr4-cpp/`; see
 
 ## AI-assisted contributions
 
-Using an AI coding assistant is welcome — much of this project was written in
+Using an AI coding assistant is welcome; much of this project was written in
 close collaboration with one (see the
 [acknowledgements](docs/about/acknowledgements.md)). Two expectations:
 
 - **Disclose the model in the PR description** (e.g. "written with Claude
   Opus 4.8").
 - Ideally, commits the agent makes should carry a `Co-Authored-By:` trailer
-  naming the model — most agents add this automatically when they run the
+  naming the model. Most agents add this automatically when they make the
   commit themselves.
 
 You remain the author: review, test, and understand what you submit. The
@@ -152,8 +157,9 @@ does to hand-written ones.
 ## Before submitting
 
 - If you changed C++ (`cpp/` or `vendor/antlr4-cpp/`), run `pixi run build` first.
-- If you changed `cpp/`, run `pixi run format-cpp` (clang-format; config in
-  `.clang-format` — one argument per line when a call/declaration doesn't fit).
+- If you changed `cpp/`, run `pixi run format-cpp` (clang-format, configured in
+  `.clang-format`, which puts one argument per line when a call or declaration does
+  not fit on one line).
 - Run `pixi run test` and make sure the suite is green.
 - If you changed `cpp/binding.cpp`'s public interface, run `pixi run stubgen` (it
   re-applies the hand edits automatically).

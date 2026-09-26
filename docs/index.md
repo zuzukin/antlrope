@@ -6,24 +6,24 @@
   </picture>
 </p>
 
-Parse text **fast** from Python using an [ANTLR](https://www.antlr.org/) grammar —
+Parse text quickly from Python with an [ANTLR](https://www.antlr.org/) grammar,
 without writing or compiling any C or C++ yourself.
 
-*antl**rope*** = ANTLR + **O**rdered **P**arse **E**vents — the parse is handed to you
-as one ordered stream of events, not a per-node [parse-tree][parse tree] walk.
+*antl**rope*** = ANTLR + **O**rdered **P**arse **E**vents: the parse is handed to you
+as one ordered stream of events instead of a per-node [parse-tree][parse tree] walk.
 
 Bring an ANTLR grammar (`.g4`), generate a parser with the ordinary ANTLR
 tool, [install antlrope](installation.md), generate a small *[facade]* from that parser,
-and write a plain-Python class with named callbacks like `enterFunction` /
-`visitTerminal`. The parsing itself runs in the official ANTLR4 C++ runtime
-and the results stream into your callbacks in a single batch — typically
-**10–20× faster** than the official pure-Python runtime, and faster still when you
-subscribe to only part of the grammar.
+and write a plain Python class with named callbacks such as `enterFunction` and
+`visitTerminal`. Parsing runs in the official ANTLR4 C++ runtime, and the results
+reach your callbacks in a single batch. This is typically 10–20× faster than the
+official pure-Python runtime, and faster still when you subscribe to only part of
+the grammar.
 
 You do not need to understand the internals to use it. If you can write an
 ANTLR grammar and a Python class, you have everything you need.
 
-> **[Get started →](getting-started.md)** — install to first result in a few minutes.
+> **[Get started →](getting-started.md)**: go from installation to a first result in a few minutes.
 
 ## What you write
 
@@ -37,48 +37,49 @@ class Collector(MyGrammarEventListener):
         ...
 
 c = Collector()
-c.walk(source_text)        # the lexer/parser are baked into the facade
+c.walk(source_text)        # the facade already knows its lexer and parser
 ```
 
-Override only the callbacks you care about; everything you don't ask for is
-skipped before it ever reaches Python.
+Override only the callbacks you care about. Events you don't subscribe to are
+dropped before they reach Python.
 
 ## Will it work with my grammar?
 
-**Usually yes.** Grammars that describe *structure* — data formats, config
-languages, query languages, most DSLs and programming languages — work out of the
-box.
+**Usually, yes.** Grammars that describe structure, such as data formats,
+configuration languages, query languages, and most DSLs and programming languages,
+work without changes.
 
-**It won't work** if your grammar depends on **[semantic predicates][semantic predicate]** (`{...}?`) or
-**[embedded actions][embedded action]** (`{...}` code blocks) to parse correctly. Those are
+**It won't work** if your grammar needs [semantic predicates][semantic predicate] (`{...}?`) or
+[embedded actions][embedded action] (`{...}` code blocks) to parse correctly. Those are
 target-language code snippets that this runtime does not execute. If your grammar
 needs them, use the official `antlr4-python3-runtime` instead. See
 [Performance & limitations](performance.md#limitation-semantic-predicates-and-embedded-actions)
-for the details and how to tell — or just ask:
-[`antlrope check <parser-module>`](reference/cli.md#antlrope-check) scans a
+for details and how to tell whether your grammar is affected. You can also run
+[`antlrope check <parser-module>`](reference/cli.md#antlrope-check), which scans a
 generated parser and reports every predicate and action by rule.
 
 ## Where to go next
 
-- [Installation](installation.md) — `pip/conda install`, supported Pythons/platforms, and
-  the ANTLR tool you need to generate parsers.
-- **[Getting started](getting-started.md)** — the full generate → write a listener →
-  run walkthrough. Start here.
-- [Chunking](chunking.md) and [Parallel parsing](parallel-parsing.md) — split large
-  or many-record input and parse the pieces across cores.
-- [Migrating from antlr4-python3-runtime](migrating.md) — if you already use the
-  official runtime's `ParseTreeListener`, this maps it onto the Antlrope facade.
-- [API reference](reference/api.md) — every callback, option, and helper.
-- [How it works](concepts.md) — optional background on *why* it's fast.
-- [Performance & limitations](performance.md) — the speed ceiling and the
-  predicate/action boundary, in full.
+- [Installation](installation.md): installing with pip or conda, supported Python
+  versions and platforms, and the ANTLR tool you need to generate parsers.
+- **[Getting started](getting-started.md)**: a complete walkthrough from generating
+  a parser to writing and running a listener. Start here.
+- [Chunking](chunking.md) and [Parallel parsing](parallel-parsing.md): split large
+  inputs, or inputs made of many records, and parse the pieces on multiple cores.
+- [Migrating from antlr4-python3-runtime](migrating.md): if you already use the
+  official runtime's `ParseTreeListener`, this page shows the facade equivalent of
+  each part.
+- [API reference](reference/api.md): every callback, option, and helper.
+- [How it works](concepts.md): optional background on why it is fast.
+- [Performance & limitations](performance.md): the limits on speed, and which
+  grammars (those with predicates or actions) are not supported.
 
 ## Using an AI coding assistant
 
 These docs are summarized for LLMs at [llms.txt](llms.txt) (see
-[llmstxt.org](https://llmstxt.org/)). To have an AI assistant write a listener —
-or port an existing `ParseTreeListener` — give it that URL (or paste the file),
-your grammar, and, when porting, your existing listener. It covers the event
+[llmstxt.org](https://llmstxt.org/)). To have an AI assistant write a listener
+or port an existing `ParseTreeListener`, give it that URL (or paste in the file),
+your grammar, and, if you are porting, your existing listener. It covers the event
 model, the callback shapes, and the porting mapping.
 
 [parse tree]: glossary.md#parse-tree
