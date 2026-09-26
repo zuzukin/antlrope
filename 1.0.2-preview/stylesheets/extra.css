@@ -1,0 +1,28 @@
+/* Custom styling for the antlrope docs.
+ *
+ * Inline code (single backticks) is given a plain (page) background instead of
+ * the default gray fill, and a warm brand-aligned color that is distinct from
+ * the (cool indigo) link color. Fenced code blocks are left untouched — the
+ * `:not(pre) > code` selector targets inline code only.
+ */
+
+:root {
+  /* Warm terracotta, harmonizes with the brand browns; distinct from links. */
+  --antlrope-inline-code-fg: #8a481b;
+}
+
+[data-md-color-scheme="slate"] {
+  /* Lighter amber so it stays legible on the dark background. */
+  --antlrope-inline-code-fg: #dca85f;
+}
+
+.md-typeset :not(pre) > code {
+  background-color: transparent;
+  color: var(--antlrope-inline-code-fg);
+  /* The monospace face renders smaller than the body face at the theme default
+     (0.85em); bump it up so inline code matches the surrounding prose. */
+  font-size: 0.95em;
+  /* Trim the padding that only made sense with a filled background. */
+  padding: 0;
+  box-shadow: none;
+}
