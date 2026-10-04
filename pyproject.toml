@@ -380,7 +380,13 @@ description = "Regenerate the event-listener facade from the generated parser mo
 cmd = "antlrope gen generated.JSONParser JSON -o json_listener.py"
 cwd = "examples/json"
 env = { PYTHONPATH = "." }
-inputs = ["examples/json/generated/*.py"]
+# The origin header records the antlrope version, and the template lives in cli/,
+# so a version bump or a generator change must also invalidate the cache.
+inputs = [
+    "examples/json/generated/*.py",
+    "src/antlrope/VERSION",
+    "src/antlrope/cli/*.py",
+]
 outputs = ["examples/json/json_listener.py"]
 
 [tool.pixi.feature.gen.tasks.gen-pred]
@@ -404,7 +410,13 @@ description = "Regenerate the schema example's event-listener facade."
 cmd = "antlrope gen generated.SchemaParser Schema -o schema_listener.py"
 cwd = "examples/schema"
 env = { PYTHONPATH = "." }
-inputs = ["examples/schema/generated/*.py"]
+# The origin header records the antlrope version, and the template lives in cli/,
+# so a version bump or a generator change must also invalidate the cache.
+inputs = [
+    "examples/schema/generated/*.py",
+    "src/antlrope/VERSION",
+    "src/antlrope/cli/*.py",
+]
 outputs = ["examples/schema/schema_listener.py"]
 
 [tool.pixi.feature.docs.tasks.docs-build]
