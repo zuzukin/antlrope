@@ -69,8 +69,9 @@ requirements:
     - ${{ stdlib('c') }}
     - cmake >=3.21
     - ninja
-    # Cross-compiled targets (osx-arm64, linux-aarch64) need a build-platform
-    # python, matching the host python, for pip and scikit-build-core to run.
+    # Only used when cross-compiling (all platforms currently build natively):
+    # a build-platform python, matching the host python, for pip and
+    # scikit-build-core to run.
     - if: build_platform != host_platform
       then:
         - python ${{ python_min }}.*
