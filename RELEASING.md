@@ -40,16 +40,21 @@ How a release goes out. Development happens on `dev`; releases are cut from
 
 ## 3. conda-forge
 
-The conda recipe lives in [conda-recipe/](conda-recipe/) (rattler-build format).
-It builds from the **PyPI sdist**, so it can only be updated after step 2.
+The package is built by the
+[antlrope feedstock](https://github.com/conda-forge/antlrope-feedstock), which is
+the source of truth for the conda recipe. It builds from the **PyPI sdist**, so
+it can only be updated after step 2.
 
-- **First release**: copy `conda-recipe/` to
-  `conda-forge/staged-recipes` under `recipes/antlrope/`, set `version` to the
-  released version and `sha256` to the sdist's hash
-  (`shasum -a 256 dist/antlrope-X.Y.Z.tar.gz`, or from the PyPI file listing),
-  and open a PR. Once merged, conda-forge creates the feedstock.
-- **Later releases**: the conda-forge autotick bot opens a version-bump PR on
-  the feedstock automatically; review and merge it there.
+- The conda-forge autotick bot opens a version-bump PR on the feedstock, usually
+  within a day of the PyPI release. Review it, wait for its CI, and merge it. If
+  the bot doesn't open one, bump `version` and the sdist `sha256` by hand (the hash
+  is in the PyPI file listing, or `shasum -a 256 dist/antlrope-X.Y.Z.tar.gz`).
+- If the release changes build requirements, supported platforms, or the Python
+  floor, update the feedstock recipe in the same PR and ask the bot to rerender
+  (`@conda-forge-admin, please rerender`).
+- [conda-recipe/](conda-recipe/) is a reference copy of the feedstock recipe for
+  local test builds (`pixi run -e recipe recipe-build`). After the feedstock
+  changes, copy its `recipe/` files back here.
 
 ## 4. After the release
 

@@ -1,11 +1,12 @@
 schema_version: 1
 
-# rattler-build recipe for conda-forge. Submitted as
-# https://github.com/conda-forge/staged-recipes/pull/34122; once merged the
-# feedstock is the source of truth and the autotick bot bumps it per PyPI
-# release — keep this copy as the reference/local-test recipe (see
-# RELEASING.md). Builds the C++ extension from the vendored ANTLR4 runtime
-# carried in the sdist, so no external runtime is fetched.
+# rattler-build recipe for conda-forge. The source of truth is the feedstock,
+# https://github.com/conda-forge/antlrope-feedstock, where the autotick bot bumps
+# the version for each PyPI release. This copy is a reference for local test
+# builds (`pixi run -e recipe recipe-build`); sync it from the feedstock when the
+# feedstock's recipe changes (see RELEASING.md). It builds the C++ extension from
+# the vendored ANTLR4 runtime carried in the sdist, so no external runtime is
+# fetched.
 
 context:
   name: antlrope
@@ -17,7 +18,7 @@ context:
   # sdist below) — not read from the repo's src/antlrope/VERSION, which is
   # the dev version and may be ahead of the latest release. Placeholder until the
   # first PyPI release; on conda-forge the autotick bot bumps it per release.
-  version: "1.0.1"
+  version: "1.0.2"
 
 package:
   name: ${{ name }}
@@ -27,7 +28,7 @@ source:
   # Prefer the PyPI sdist (carries the vendored runtime). Replace sha256 on each
   # release.
   url: https://pypi.org/packages/source/${{ name[0] }}/${{ name }}/antlrope-${{ version }}.tar.gz
-  sha256: "678b235a7ed094074fa0c28133ee99d0570c44954307a474c5ed8d5fc377ecaa"
+  sha256: "a4093fd872516fe3eef3522bc054712194bb7cbd81fd4d647e4d2071893bd648"
 
 build:
   number: 0
@@ -68,6 +69,12 @@ requirements:
     - ${{ stdlib('c') }}
     - cmake >=3.21
     - ninja
+    # Cross-compiled targets (osx-arm64, linux-aarch64) need a build-platform
+    # python, matching the host python, for pip and scikit-build-core to run.
+    - if: build_platform != host_platform
+      then:
+        - python ${{ python_min }}.*
+        - cross-python_${{ host_platform }}
   host:
     # Build against the 3.12 floor; python-abi3 sets up the Stable-ABI build and
     # carries the run_exports that pin the runtime to `python >=3.12` + python-abi3.
